@@ -1,0 +1,9 @@
+{
+  "id": "replay_demo_001",
+  "sessionId": "demo-session",
+  "createdAt": "2026-03-08T00:00:20.000Z",
+  "userText": "Can this memory system replay the original wording?",
+  "assistantText": "Yes. The L2 raw replay layer stores the original user and assistant turns so recall can return verbatim evidence snippets.",
+  "entities": ["L2", "raw replay", "verbatim recall"],
+  "files": []
+}

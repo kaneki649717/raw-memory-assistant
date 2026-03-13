@@ -1,0 +1,15 @@
+{
+  "id": "dec_demo_memory_001",
+  "eventId": "evt_demo_memory_001",
+  "sessionId": "demo-session",
+  "title": "Adopt layered agent memory",
+  "decisionText": "Use L0/L1/L2 + event + hybrid retrieval + rerank as the core memory architecture.",
+  "whyText": "A flat embedding-only memory system cannot clearly distinguish summary memory, decisions, timeline progression, and raw replay.",
+  "outcomeText": "The system architecture is split into layers with query-time recall.",
+  "files": ["docs/architecture.md"],
+  "entities": ["L0", "L1", "L2", "event", "rerank"],
+  "configKeys": [],
+  "commands": [],
+  "confidence": 0.93,
+  "createdAt": "2026-03-08T00:00:10.000Z"
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Working Memory Event",
+  "type": "object",
+  "required": ["id", "timestamp", "sessionId", "actionType", "summaryShort"],
+  "properties": {
+    "id": { "type": "string" },
+    "timestamp": { "type": "string", "description": "ISO timestamp" },
+    "sessionId": { "type": "string" },
+    "chatType": { "type": "string", "enum": ["direct", "group", "channel", "unknown"] },
+    "topic": { "type": "string" },
+    "actionType": { "type": "string" },
+    "entities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "summaryShort": { "type": "string" },
+    "resultTag": { "type": "string" },
+    "importance": { "type": "number", "minimum": 0, "maximum": 1 },
+    "sourceMessageCount": { "type": "integer", "minimum": 0 },
+    "sourceRefs": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

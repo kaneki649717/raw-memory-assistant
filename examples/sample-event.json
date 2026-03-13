@@ -1,0 +1,14 @@
+{
+  "id": "evt_demo_memory_001",
+  "timestamp": "2026-03-08T00:00:00.000Z",
+  "sessionId": "demo-session",
+  "chatType": "direct",
+  "topic": "memory-architecture",
+  "actionType": "design",
+  "entities": ["L0", "L1", "L2", "hybrid recall"],
+  "summaryShort": "Designed a layered memory architecture with L0/L1/L2 and hybrid retrieval.",
+  "resultTag": "direction_confirmed",
+  "importance": 0.8,
+  "sourceMessageCount": 2,
+  "sourceRefs": []
+}

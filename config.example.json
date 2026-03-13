@@ -1,0 +1,17 @@
+{
+  "storage": {
+    "root": "./data"
+  },
+  "models": {
+    "embedding": {
+      "baseUrl": "",
+      "apiKey": "",
+      "model": ""
+    },
+    "light": {
+      "baseUrl": "",
+      "apiKey": "",
+      "model": ""
+    }
+  }
+}
