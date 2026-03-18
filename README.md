@@ -646,17 +646,21 @@ agent-memory-architecture/
 
 ## 文档索引
 
+### 核心文档
+- **[架构深度剖析](./ARCHITECTURE-DEEP-DIVE.md)** ⭐⭐⭐ - 全面深度剖析记忆架构
 - [架构总览](./docs/architecture.md)
 - [模块说明](./docs/module-map.md)
 - [数据流](./docs/data-flow.md)
 - [使用说明](./docs/usage.md)
 - [路线图](./docs/roadmap.md)
+
+### 技术文档
 - [解耦说明](./docs/decoupling-notes.md)
 - [发布检查清单](./docs/release-checklist.md)
 - [验证总结](./docs/validation-summary.md)
 - **[2026-03-10 修复记录](./docs/fixes-2026-03-10.md)** ⭐
 
-内部开发记录：
+### 内部开发记录
 - [验证第 1 轮](./docs/validation-round-1.md)
 - [验证第 2 轮](./docs/validation-round-2.md)
 - [验证第 3 轮](./docs/validation-round-3.md)

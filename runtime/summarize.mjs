@@ -1,13 +1,11 @@
 import fs from "node:fs";
-import path from "node:path";
 import { callLightModel } from "./light-model.mjs";
-import { PROMPTS_DIR } from "./paths.mjs";
 
-const L0_PROMPT_PATH = path.join(PROMPTS_DIR, "l0-summarizer.md");
-const L1_PROMPT_PATH = path.join(PROMPTS_DIR, "l1-summarizer.md");
+const L0_PROMPT_PATH = "C:/Users/1/.openclaw/workspace/memory/working-memory/prompts/l0-summarizer.md";
+const L1_PROMPT_PATH = "C:/Users/1/.openclaw/workspace/memory/working-memory/prompts/l1-summarizer.md";
 
-function readPrompt(filePath) {
-  return fs.readFileSync(filePath, "utf-8");
+function readPrompt(path) {
+  return fs.readFileSync(path, "utf-8");
 }
 
 function extractJsonBlock(text) {

@@ -11,14 +11,14 @@ async function main() {
   const [, , command, ...rest] = process.argv;
 
   if (!command) {
-    print({ ok: false, error: "缺少命令", commands: ["ingest", "recall", "reindex", "hybrid", "replay"] });
+    print({ ok: false, error: "missing command", commands: ["ingest", "recall", "reindex", "hybrid", "replay"] });
     process.exitCode = 1;
     return;
   }
 
   if (command === "ingest") {
-    const [sessionId = "manual", userText = "", assistantText = "", chatType = "direct"] = rest;
-    const result = await ingestTurn({ sessionId, userText, assistantText, chatType });
+    const [sessionId = "manual", userText = "", assistantText = "", chatType = "direct", timestamp = ""] = rest;
+    const result = await ingestTurn({ sessionId, userText, assistantText, chatType, timestamp: timestamp || undefined });
     print({ ok: true, mode: "ingest", result });
     return;
   }
@@ -50,7 +50,7 @@ async function main() {
     return;
   }
 
-  print({ ok: false, error: `未知命令: ${command}` });
+  print({ ok: false, error: `unknown command: ${command}` });
   process.exitCode = 1;
 }
 

@@ -144,7 +144,8 @@ function architectureAndPolicyPriority(query, item) {
     "按需召回",
     "停止会话启动时硬读",
     "启动阶段不再强制读取记忆文件",
-    "memory bootstrap file",
+    "memory.md",
+    "memory/yyyy-mm-dd.md",
     "开场强制读",
   ];
   const localSignals = [
@@ -155,8 +156,8 @@ function architectureAndPolicyPriority(query, item) {
     "runtime骨架",
     "增量写vector store",
     "手动reindex",
-    "runtime edge case",
-    "graceful exit",
+    "uv_handle_closing",
+    "windows 退出断言",
   ];
 
   const architectureHits = architectureSignals.filter((signal) => hay.includes(signal)).length;
@@ -224,8 +225,8 @@ function nextStepPriority(query, item) {
   const branchNoiseSignals = [
     "history-index.ts",
     "导航层",
-    "runtime edge case",
-    "graceful exit",
+    "windows 退出断言",
+    "uv_handle_closing",
     "原话回放",
     "l2/raw replay",
     "runtime骨架",
@@ -241,7 +242,7 @@ function nextStepPriority(query, item) {
   score -= Math.min(0.36, branchNoiseHits * 0.18);
 
   if (hay.includes("history-index.ts")) score -= 0.16;
-  if (hay.includes("runtime edge case") || hay.includes("graceful exit")) score -= 0.18;
+  if (hay.includes("uv_handle_closing") || hay.includes("windows 退出断言")) score -= 0.18;
   if (hay.includes("l2/raw replay") || hay.includes("原话回放")) score -= 0.12;
 
   return score;

@@ -1,41 +1,9 @@
 import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-function findConfigPath() {
-  // 优先使用环境变量
-  if (process.env.AGENT_MEMORY_CONFIG_PATH) {
-    return process.env.AGENT_MEMORY_CONFIG_PATH;
-  }
-  
-  // 尝试从当前目录向上查找 openclaw.json
-  let currentDir = __dirname;
-  for (let i = 0; i < 5; i++) {
-    const configPath = path.join(currentDir, "openclaw.json");
-    if (fs.existsSync(configPath)) {
-      return configPath;
-    }
-    currentDir = path.dirname(currentDir);
-  }
-  
-  // 回退到用户目录
-  const homeDir = process.env.HOME || process.env.USERPROFILE;
-  if (homeDir) {
-    const configPath = path.join(homeDir, ".openclaw", "openclaw.json");
-    if (fs.existsSync(configPath)) {
-      return configPath;
-    }
-  }
-  
-  throw new Error("openclaw.json not found. Set AGENT_MEMORY_CONFIG_PATH environment variable.");
-}
+const CONFIG_PATH = "C:/Users/1/.openclaw/openclaw.json";
 
 function readConfig() {
-  const configPath = findConfigPath();
-  return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
 }
 
 export function resolveLightModelConfig() {
@@ -64,47 +32,33 @@ export function resolveLightModelConfig() {
 
 export async function callLightModel(params) {
   const cfg = resolveLightModelConfig();
-  
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
-  
-  try {
-    const response = await fetch(`${cfg.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${cfg.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: cfg.model,
-        messages: [
-          { role: "system", content: params.system },
-          { role: "user", content: params.user },
-        ],
-        temperature: params.temperature ?? 0.2,
-        max_tokens: params.maxTokens ?? 500,
-        stream: false,
-      }),
-      signal: controller.signal,
-    });
+  const response = await fetch(`${cfg.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${cfg.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: cfg.model,
+      messages: [
+        { role: "system", content: params.system },
+        { role: "user", content: params.user },
+      ],
+      temperature: params.temperature ?? 0.2,
+      max_tokens: params.maxTokens ?? 500,
+      stream: false,
+    }),
+  });
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`light-model-http-${response.status}: Request failed`);
-    }
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-    if (!content || typeof content !== "string") {
-      throw new Error("light-model-empty-content");
-    }
-    return content.trim();
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error('light-model-timeout: Request timeout after 30s');
-    }
-    throw error;
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`light-model-http-${response.status}: ${text.slice(0, 300)}`);
   }
+
+  const data = await response.json();
+  const content = data?.choices?.[0]?.message?.content;
+  if (!content || typeof content !== "string") {
+    throw new Error("light-model-empty-content");
+  }
+  return content.trim();
 }

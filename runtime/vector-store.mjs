@@ -1,22 +1,43 @@
 import fs from "node:fs";
-import path from "node:path";
-import { VECTOR_STORE_FILE } from "./paths.mjs";
+import { STORE_DIR, VECTOR_STORE_FILE } from "./paths.mjs";
+
+function ensureDir() {
+  fs.mkdirSync(STORE_DIR, { recursive: true });
+}
+
+function writeJsonAtomic(filePath, data) {
+  ensureDir();
+  const tmpPath = `${filePath}.tmp-${process.pid}-${Date.now()}`;
+  fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf-8");
+  fs.renameSync(tmpPath, filePath);
+}
 
 function ensureVectorStore() {
-  fs.mkdirSync(path.dirname(VECTOR_STORE_FILE), { recursive: true });
+  ensureDir();
   if (!fs.existsSync(VECTOR_STORE_FILE)) {
-    fs.writeFileSync(VECTOR_STORE_FILE, JSON.stringify({ version: 1, items: [] }, null, 2), "utf-8");
+    writeJsonAtomic(VECTOR_STORE_FILE, { version: 2, items: [] });
   }
+}
+
+function normalizeStore(store) {
+  return {
+    version: Number(store?.version) || 2,
+    items: Array.isArray(store?.items) ? store.items : [],
+  };
 }
 
 export function loadVectorStore() {
   ensureVectorStore();
-  return JSON.parse(fs.readFileSync(VECTOR_STORE_FILE, "utf-8"));
+  try {
+    return normalizeStore(JSON.parse(fs.readFileSync(VECTOR_STORE_FILE, "utf-8")));
+  } catch {
+    return { version: 2, items: [] };
+  }
 }
 
 export function saveVectorStore(store) {
   ensureVectorStore();
-  fs.writeFileSync(VECTOR_STORE_FILE, JSON.stringify(store, null, 2), "utf-8");
+  writeJsonAtomic(VECTOR_STORE_FILE, normalizeStore(store));
 }
 
 export function upsertVectorItems(items) {

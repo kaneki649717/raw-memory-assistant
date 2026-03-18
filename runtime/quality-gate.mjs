@@ -1,6 +1,7 @@
 export function sanitizeMemoryText(value) {
   return String(value ?? "")
     .replace(/\uFFFD/g, "")
+    .replace(/�\?/g, "")
     .replace(/�/g, "")
     .replace(/[\r\t]+/g, " ")
     .replace(/\s+/g, " ")
@@ -14,13 +15,12 @@ export function isWeakL0(text) {
   if (trimmed.length > 48) return true;
   if (!trimmed.includes("|")) return true;
   if (trimmed.toLowerCase().includes("general")) return true;
-  
   const parts = trimmed.split("|").map((v) => sanitizeMemoryText(v));
   if (parts.length < 3) return true;
   if (!parts[1] || parts[1].length < 2) return true;
   if (!parts[2] || parts[2].length < 6) return true;
   
-  // 【2026-03-10 新增】禁止模糊表述检测
+  // 【新增】禁止模糊表述检测
   const vaguePatterns = [
     /修复了bug/i,
     /修改了配置/i,

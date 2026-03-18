@@ -1,54 +1,47 @@
-import { loadProjectConfig } from "./config.mjs";
+import fs from "node:fs";
+
+const CONFIG_PATH = "C:/Users/1/.openclaw/openclaw.json";
+
+function readConfig() {
+  return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
+}
 
 export function resolveEmbeddingConfig() {
-  const config = loadProjectConfig();
-  const embedding = config?.models?.embedding;
-  if (!embedding?.baseUrl || !embedding?.apiKey || !embedding?.model) {
-    throw new Error("embedding model config missing in config.json or AGENT_MEMORY_CONFIG_PATH");
+  const config = readConfig();
+  const ms = config?.agents?.defaults?.memorySearch;
+  const remote = ms?.remote;
+  if (!remote?.baseUrl || !remote?.apiKey || !ms?.model) {
+    throw new Error("memorySearch remote embedding config missing in openclaw.json");
   }
   return {
-    baseUrl: String(embedding.baseUrl).replace(/\/$/, ""),
-    apiKey: String(embedding.apiKey),
-    model: String(embedding.model),
+    baseUrl: String(remote.baseUrl).replace(/\/$/, ""),
+    apiKey: String(remote.apiKey),
+    model: String(ms.model),
   };
 }
 
 export async function embedTexts(texts) {
   const cfg = resolveEmbeddingConfig();
-  
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
-  
-  try {
-    const response = await fetch(`${cfg.baseUrl}/embeddings`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${cfg.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: cfg.model,
-        input: texts,
-        encoding_format: "float",
-      }),
-      signal: controller.signal,
-    });
+  const response = await fetch(`${cfg.baseUrl}/embeddings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${cfg.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: cfg.model,
+      input: texts,
+      encoding_format: "float",
+    }),
+  });
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`embedding-http-${response.status}: Request failed`);
-    }
-
-    const data = await response.json();
-    const items = data?.data;
-    if (!Array.isArray(items)) throw new Error("embedding-invalid-response");
-    return items.map((item) => item.embedding);
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error('embedding-timeout: Request timeout after 30s');
-    }
-    throw error;
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`embedding-http-${response.status}: ${text.slice(0, 300)}`);
   }
+
+  const data = await response.json();
+  const items = data?.data;
+  if (!Array.isArray(items)) throw new Error("embedding-invalid-response");
+  return items.map((item) => item.embedding);
 }
