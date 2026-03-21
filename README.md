@@ -1,6 +1,6 @@
 # 分层 Agent 记忆架构（适配 OpenClaw）
 
-> 一套面向智能体长期上下文的分层记忆系统：不仅能记“摘要”，还能记“决策”“事件”和“原话”，并在查询时按需召回，再把最相关记忆注入当前对话上下文。
+> 一套面向智能体长期上下文的分层记忆系统：不仅能记"摘要"，还能记"决策""事件"和"原话"，并在查询时按需召回，再把最相关记忆注入当前对话上下文。
 
 ---
 
@@ -8,9 +8,9 @@
 
 这是一个面向 Agent / OpenClaw 场景设计的**分层记忆架构项目**。
 
-它不是传统那种“把聊天记录全扔进向量库，然后靠 embedding 做相似检索”的简单记忆方案，而是把记忆拆成不同层：
+它不是传统那种"把聊天记录全扔进向量库，然后靠 embedding 做相似检索"的简单记忆方案，而是把记忆拆成不同层：
 
-- **L0：短摘要层** —— 快速给模型一个“这一段发生了什么”的导航视图
+- **L0：短摘要层** —— 快速给模型一个"这一段发生了什么"的导航视图
 - **L1：决策层** —— 保存可以复用的决定、原因和结果
 - **L2：原话回放层** —— 保存 user / assistant 的原始回合文本，支持回放原话证据
 - **事件层（Event）** —— 表达时间线、过程推进和阶段变化
@@ -18,9 +18,9 @@
 - **重排（Rerank）** —— 根据查询意图重新排序候选记忆
 - **上下文注入（Runtime Injection）** —— 把最相关记忆打包注入当前运行时上下文
 
-这套东西的目标，不是“让模型记更多字”，而是：
+这套东西的目标，不是"让模型记更多字"，而是：
 
-> **让模型在需要时拿到“正确类型的记忆”。**
+> **让模型在需要时拿到"正确类型的记忆"。**
 
 ---
 
@@ -32,13 +32,13 @@
    - 决策、事件、原话、摘要没有区分
 
 2. **只能找相似文本，不能理解记忆角色**
-   - 问“上次我们定了什么方案”
-   - 和问“当时原话怎么说的”
+   - 问"上次我们定了什么方案"
+   - 和问"当时原话怎么说的"
    - 实际需要的是两种不同的记忆
 
 3. **会话一长就只能靠压缩摘要**
    - 摘要会丢细节
-   - 尤其容易丢掉“为什么这么做”和“原话证据”
+   - 尤其容易丢掉"为什么这么做"和"原话证据"
 
 4. **启动时硬读大记忆文件，污染上下文**
    - 会浪费上下文窗口
@@ -55,11 +55,12 @@
 
 ## 为什么这不是普通 RAG
 
-很多人第一眼看到“向量检索 + 记忆 + 注入上下文”，会觉得这就是普通 RAG。
+很多人第一眼看到"向量检索 + 记忆 + 注入上下文"，会觉得这就是普通 RAG。
 
 但这套系统和普通 RAG 的核心区别很明显：
 
 ### 普通 RAG 更像什么
+
 普通 RAG 的典型思路通常是：
 
 - 把文档切块
@@ -73,382 +74,319 @@
 - 外部资料检索
 
 ### 这套系统更像什么
+
 这套系统更像：
 
-> **面向对话连续性、任务推进和长期协作的“分层工作记忆系统”**
+> **面向对话连续性、任务推进和长期协作的"分层工作记忆系统"**
 
-它和普通 RAG 的不同点主要在这里：
+它和普通 RAG 的不同点：
 
-#### 1）它不是只有一层向量库
-普通 RAG：
-- 主要是统一向量空间
-
-这套系统：
-- L0 短摘要
-- L1 决策
-- L2 原话回放
-- Event 时间线
-- Hybrid 检索
-- Rerank
-
-#### 2）它关心“记忆类型”，不只是“文本相似度”
-普通 RAG 更关注：
-- 哪段文本和 query 最像
-
-这套系统更关注：
-- 你现在需要的是摘要？
-- 决策？
-- 时间线？
-- 原话证据？
-
-#### 3）它服务的是“连续协作”，不是单次问答
-普通 RAG 更适合：
-- 查资料
-- 查文档
-
-这套系统更适合：
-- 延续上次主线
-- 回忆之前定过的方案
-- 找回当时原话
-- 支持长期项目推进
-
-#### 4）它强调写入链路，而不只是读取链路
-普通 RAG 往往重点在“怎么检索文档”。
-
-这套系统同时重视：
-- 怎么 ingest 一轮对话
-- 怎么写 event / decision / L0 / replay
-- 怎么增量更新索引
-- 怎么在后续 query 里按类型召回
-
-#### 5）它不是简单“把检索结果塞回去”
-这套系统在召回后还会做：
-- 统一合并
-- rerank
-- context pack 打包
-- 再注入当前运行时上下文
+| 维度 | 普通 RAG | 本系统 |
+|------|---------|--------|
+| 存储结构 | 扁平化向量库 | L0 摘要 / L1 决策 / L2 原话 / Event 时间线，分层存储 |
+| 检索方式 | 只看文本相似度 | 按记忆角色召回 + 向量 + 词法 + 重排 |
+| 服务场景 | 单次问答 | 长期协作、任务推进、对话连续性 |
+| 写入链路 | 通常不关注 | 完整 ingest：实体提取 → 摘要生成 → 结构化写入 → 索引更新 |
+| 输出形式 | 检索结果直接拼接 | Context Pack 打包 + 分桶输出 |
 
 所以更准确地说：
 
-> **它可以用到 RAG 的检索能力，但它本身不是“普通 RAG”，而是一套分层的 Agent Working Memory。**
+> **它可以用到 RAG 的检索能力，但它本身不是"普通 RAG"，而是一套分层的 Agent Working Memory。**
 
 ---
 
 ## 核心分层设计
 
-### 1）L0：短摘要层
-作用：
+### L0：短摘要层
+
 - 快速注入上下文
-- 给模型一个“这一段最核心发生了什么”的导航视图
+- 给模型一个"这一段最核心发生了什么"的导航视图
+- 适合回答：最近主线是什么？这一段大概在做什么？
 
-适合回答：
-- 最近主线是什么？
-- 这一段大概在做什么？
+**示例**：
+```json
+{
+  "id": "l0_xxx",
+  "topic": "记忆系统",
+  "actionType": "记忆设计",
+  "summaryShort": "记忆设计 | 记忆系统 | 修复 embedding 配置读取失败，恢复向量检索",
+  "resultTag": "方案已形成",
+  "importance": 0.7
+}
+```
 
-### 2）L1：决策层
-作用：
+### L1：决策层
+
 - 保存结构化决策
 - 强调：做了什么决定、为什么这么做、结果如何
+- 适合回答：上次我们最终决定怎么做？为什么不走旧方案？
 
-适合回答：
-- 上次我们最终决定怎么做？
-- 为什么不走旧方案？
+**示例**：
+```json
+{
+  "id": "dec_xxx",
+  "title": "记忆存储路径重构",
+  "decisionText": "将存储根目录从 ./data 改为 workspace 下 memory/working-memory/store",
+  "whyText": "与 OpenClaw workspace 结构对齐，避免外部路径依赖",
+  "outcomeText": "路径解耦完成，可独立运行",
+  "files": ["store.mjs", "paths.mjs"],
+  "entities": ["working-memory", "store"]
+}
+```
 
-### 3）L2：原话回放层
-作用：
+### L2：原话回放层
+
 - 保存原始 user / assistant 回合
-- 当用户问“原话是什么”时，回放原始文本证据
+- 当用户问"原话是什么"时，回放原始文本证据
+- 适合回答：你当时原话怎么说的？那段聊天原文是什么？
 
-适合回答：
-- 你当时原话怎么说的？
-- 那段聊天原文是什么？
+### Event：事件层
 
-### 4）事件层（Event）
-作用：
 - 表达时间线、推进过程、阶段变化
-- 用来补充“不是最终结论，但值得记住”的过程信息
+- 用来补充"不是最终结论，但值得记住"的过程信息
+- 适合回答：这几天是怎么一步一步推进到这里的？
 
-适合回答：
-- 这几天是怎么一步一步推进到这里的？
-- 某个功能是在哪个阶段做出来的？
-
----
-
-## 一张图看懂整体链路
-
-```text
-用户查询
-   ↓
-意图分类
-   ↓
-多源召回
-   ├─ L0 短摘要召回
-   ├─ L1 决策召回
-   ├─ Event 时间线召回
-   ├─ L2 原话回放召回
-   └─ Hybrid 混合检索
-   ↓
-结果统一合并
-   ↓
-Rerank 重排
-   ↓
-Context Pack 上下文打包
-   ↓
-注入当前模型上下文
-   ↓
-模型继续回答
+**示例**：
+```json
+{
+  "id": "evt_xxx",
+  "topic": "OpenClaw",
+  "actionType": "配置修改",
+  "summaryShort": "配置修改 | OpenClaw | 修复 embedding baseUrl 配置",
+  "resultTag": "已调整",
+  "entities": ["embedding-model.mjs", "config.json"],
+  "timelineKey": "timeline:openclaw:2026-03-21"
+}
 ```
 
 ---
 
-## 写入链路（Ingest）怎么工作
+## 整体数据流
 
-每当发生一轮有效对话时，可以把这一轮写入记忆系统：
+### 一张图看懂
+
+```text
+┌─────────────────────────────────────────────────────┐
+│                    写入链路 (Ingest)                   │
+│                                                       │
+│  用户回合 + 助手回合                                   │
+│       ↓                                               │
+│  实体提取 (entity-extractor)                           │
+│       ↓                                               │
+│  L0 摘要生成 (summarize + quality-gate)               │
+│       ↓                                               │
+│  ┌─────────────────────────────────┐                  │
+│  │  写入 Event  → store.json       │                  │
+│  │  写入 L0     → working-memory-l0.json              │
+│  │  写入 Decision → store.json (按需) │                │
+│  │  写入 Replay  → replay-store.json │                │
+│  │  更新向量索引 → vector-store.json │                │
+│  └─────────────────────────────────┘                  │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│                    读取链路 (Recall)                   │
+│                                                       │
+│  用户查询                                              │
+│       ↓                                               │
+│  意图分类                                              │
+│       ↓                                               │
+│  多源召回                                              │
+│    ├─ L0 短摘要召回                                    │
+│    ├─ L1 决策召回                                      │
+│    ├─ Event 时间线召回                                 │
+│    ├─ L2 原话回放召回                                  │
+│    └─ Hybrid 混合检索 (向量 + 词法)                    │
+│       ↓                                               │
+│  结果统一合并 (Bundle)                                 │
+│       ↓                                               │
+│  Rerank 重排                                          │
+│       ↓                                               │
+│  Context Pack 上下文打包                               │
+│       ↓                                               │
+│  注入当前模型上下文                                    │
+└─────────────────────────────────────────────────────┘
+```
+
+### 写入详细流程
 
 ```text
 用户回合 + 助手回合
-  -> 实体提取
-  -> 生成 L0 摘要
-  -> 按需生成 L1 决策
-  -> 写入 Event
-  -> 写入 L0 项
-  -> 写入 Replay 原话
-  -> 增量更新向量索引
+  ↓
+sanitizeMemoryText() — 清洗文本
+  ↓
+extractEntities() + inferActionType() — 提取实体、推断动作类型
+  ↓
+chooseTopic() — 选择话题 (OpenClaw / 抖音相关 / 记忆系统 / ...)
+  ↓
+shouldSkipL0Turn() — 跳过无意义回合 (问候 / 纯确认 / 系统消息)
+  ↓
+generateL0WithModel() — 调用 light model 生成 L0 摘要
+  ↓
+isWeakL0() + normalizeL0() — 质量门过滤弱摘要
+  ↓
+maybeCreateDecision() — 按需调用 light model 生成 L1 决策
+  ↓
+appendEvent() + appendL0Item() + appendDecision() — 写入 store
+  ↓
+appendReplayItem() — 写入原话回放
+  ↓
+indexTurnArtifacts() — 增量更新向量索引
 ```
 
-### 写入后会得到什么
+### 去重与合并机制
 
-通常会得到这些结果：
-- 一个 `event`
-- 一个 `l0Item`
-- 视情况生成一个 `decision`
-- 一条 `replay` 原话记录
-- 一批向量索引项
+写入时，L0 层有自动合并逻辑：
+
+```text
+appendL0Item(item)
+  ↓
+回溯最近 5 条记录
+  ↓
+shouldMergeL0(existing, item)?
+  ├─ topicKey 不同 → 不合并，新建
+  ├─ timelineKey 不同 → 不合并，新建
+  ├─ topicKey 在宽泛合并集合中 (openclaw / 抖音相关 / ...) → 合并
+  └─ actionType 相同 + summary 相似 → 合并
+```
+
+### Session 类型过滤
+
+系统会根据 session 类型决定是否写入记忆：
+
+| Session 类型 | 是否写入记忆 | 说明 |
+|-------------|-------------|------|
+| `agent:main:main` | ✅ 写入 | 主会话，所有对话正常记录 |
+| `agent:main:telegram:*` | ✅ 写入 | Telegram 对话正常记录 |
+| `agent:main:cron:*` | ❌ 跳过 | cron 定时任务产生的重复性结果不写入 |
+| `agent:main:subagent:*` | ❌ 跳过 | 子 agent 临时会话不写入主记忆 |
+
+> **设计原因**：cron 任务（如抖音直播监控）每几分钟执行一次，每次都产生"均未开播"之类的重复结果，如果全部写入记忆会严重污染数据。
 
 ---
 
-## 读取链路（Recall）怎么工作
+## OpenClaw 插件接入
 
-当用户发来一个问题，系统先判断这类问题更像是在要哪种记忆：
+### 插件是什么
 
-- 要连续上下文？
-- 要结构化决策？
-- 要技术细节？
-- 要原话证据？
+这个项目通过 OpenClaw 的插件机制（`extensions/working-memory-core`）接入宿主，实现：
 
-然后从不同来源召回，再合并重排：
+- **对话结束后自动 ingest**：通过 `agent_end` hook 自动将每轮对话写入记忆
+- **查询时按需 recall**：通过 `memory_search` / `memory_get` 工具让模型主动召回记忆
+- **自动去重**：通过 hash 机制防止同一轮对话被重复写入
+
+### 插件文件结构
 
 ```text
-查询
-  -> 判断 recall 意图
-  -> 从 L0 / 决策 / 事件 / 原话 / 混合检索 中召回
-  -> 合并 bundle
-  -> 重排
-  -> 生成 context pack
-  -> 注入当前上下文
+extensions/working-memory-core/
+├── openclaw.plugin.json   # OpenClaw 插件描述文件
+├── package.json           # npm 包描述
+├── index.mjs              # 主入口（注册 tools + agent_end hook）
+├── index.ts               # TypeScript 源码
+└── live-ingest.ts         # 备用 ingest 入口
+```
+
+### Hook 接入流程
+
+```text
+agent_end 事件触发
+  ↓
+extractLatestTurn(messages) — 提取最后一轮 user/assistant 对话
+  ↓
+sessionKey 过滤 — 跳过 cron/subagent session
+  ↓
+persistIncrementalTurn() — 调用 CLI 进行 ingest
+  ↓
+hash 去重检查 — 同一轮对话不重复写入
+  ↓
+execFileSync(cliPath, ["ingest", sessionKey, userText, assistantText])
+```
+
+### Tool 注册
+
+插件注册了两个工具供模型在对话中主动调用：
+
+**memory_search**：
+```json
+{
+  "name": "memory_search",
+  "parameters": {
+    "query": "搜索关键词",
+    "maxResults": 8,
+    "minScore": 0.0
+  }
+}
+```
+
+**memory_get**：
+```json
+{
+  "name": "memory_get",
+  "parameters": {
+    "path": "working-memory/l0|decision|timeline|rawEvidence",
+    "from": 1,
+    "lines": 20
+  }
+}
 ```
 
 ---
 
-## 这个项目和 OpenClaw 是什么关系
-
-这个项目**可以独立运行**，也**可以接入 OpenClaw**。
-
-你可以把它理解成两种形态：
-
-### 形态 A：独立记忆项目
-你可以单独运行它：
-- ingest 一轮对话
-- recall 一条记忆
-- replay 一段原话
-- 单独调试和验证
-
-### 形态 B：OpenClaw 的记忆扩展模块 / 插件形态
-把它接到 OpenClaw 对话流里，它就会变成：
-
-> **一个给 OpenClaw 提供更强记忆能力的外接模块**
-
-也就是前面你问的“插件”。
-
----
-
-## “插件”到底是什么意思
-
-这里说的“插件”，最通俗的理解就是：
-
-> **给 OpenClaw 额外插上的一个功能模块。**
-
-它不是 OpenClaw 本体原生自带的逻辑，而是一个外挂能力层。
-
-如果你的这套架构做成 OpenClaw 的 memory 插件，它干的事情大概就是：
-
-### 在写入时
-- 对每轮对话做 ingest
-- 生成 event / decision / L0 / replay
-- 更新 vector store
-
-### 在读取时
-- 在模型回答前做 recall
-- 把召回结果打成 context pack
-- 注入到当前模型上下文
-- 必要时提供 replay 原话证据
-
-也就是说，它的作用是：
-
-> **增强 OpenClaw 的记忆系统，而不是单纯替代聊天上下文。**
-
----
-
-## 如何接入你自己的本地 OpenClaw
-
-这里给你一个清晰的接入思路。
-
-### 接入目标
-让 OpenClaw 在对话流中：
-- **对话后写入记忆**
-- **回答前按需召回记忆**
-
-### 最推荐的接入位置
-
-#### 1）在对话完成后做 ingest
-当一轮 user / assistant 对话结束后，把这轮内容送进 `ingest`：
-
-用途：
-- 写 event
-- 写 L0
-- 按需写 decision
-- 写 replay
-- 更新索引
-
-#### 2）在模型回答前做 recall
-当用户发来新问题时，先用 query 去做 recall：
-
-用途：
-- 找连续性记忆
-- 找历史决策
-- 找原话证据
-- 找相关代码 / 文件 / 架构片段
-
-#### 3）把 recall 结果注入上下文
-把召回结果整理成：
-- 短摘要
-- 关键决策
-- 必要的原话证据
-
-再作为 `context pack` 注入当前模型上下文。
-
----
-
-## 接入 OpenClaw 的两种方式
-
-### 方式 1：先做外部调用
-这是最稳的。
-
-OpenClaw 对话流里，在合适时机调用这个项目的 CLI 或 runtime：
-
-- 对话后调用 `ingest`
-- 对话前调用 `recall`
-
-优点：
-- 改动小
-- 易于调试
-- 不会一上来把 OpenClaw 内部流程改太深
-
-### 方式 2：做成更深的 memory 插件层
-把这套逻辑更深地接到 OpenClaw 的记忆链路里：
-
-- 用它替代一部分原始 memory recall
-- 或作为 recall 的增强层
-- 或作为更高优先级的“结构化记忆层”
-
-优点：
-- 集成更自然
-- 体验更统一
-
-缺点：
-- 需要更明确的接口设计
-- 对运行链路侵入更深
-
-### 实际建议
-如果是你自己本地用，建议先走：
-
-> **OpenClaw 外部调用 + 逐步接深**
-
-也就是：
-1. 先独立跑通
-2. 再接进 OpenClaw
-3. 最后再考虑做成更彻底的插件形态
-
----
-
-## OpenClaw 接入示意图
-
-### 方案一：外部调用式接入
+## 仓库结构
 
 ```text
-用户消息
-   ↓
-OpenClaw 正常接收消息
-   ↓
-（回答前）调用 recall(query)
-   ↓
-拿到 context pack
-   ↓
-把 context pack 注入当前模型上下文
-   ↓
-模型生成回答
-   ↓
-（回答后）调用 ingest(userText + assistantText)
-   ↓
-写入 event / L0 / decision / replay / vector index
-```
-
-### 方案二：更深的 memory 插件式接入
-
-```text
-用户消息
-   ↓
-OpenClaw 主运行时
-   ↓
-记忆插件层
-   ├─ recall：回答前召回分层记忆
-   ├─ rerank：按当前问题重排候选记忆
-   ├─ context pack：把记忆整理成可注入上下文
-   └─ ingest：回答后写回新的 event / decision / replay
-   ↓
-模型生成回答
-```
-
-### 两种接入方式的区别
-
-#### 外部调用式
-- 更容易先跑通
-- 更适合个人本地先验证
-- 对 OpenClaw 主体侵入更小
-
-#### 插件式
-- 更适合深度集成
-- 更自然地融入记忆链路
-- 更适合未来做成正式 memory 扩展层
-
----
-
-## 最小接入思路示例
-
-### 写入时
-```text
-用户发消息
-  -> OpenClaw 正常回答
-  -> 拿 userText + assistantText 调用 ingest
-```
-
-### 读取时
-```text
-用户发新问题
-  -> 先调用 recall(query)
-  -> 拿到 context pack
-  -> 把 context pack 注入模型上下文
-  -> 再生成最终回复
+raw-memory-assistant/
+├── runtime/                          # 运行时核心模块
+│   ├── ingest.mjs                    # 写入链路（实体提取→摘要→决策→写入→索引）
+│   ├── recall.mjs                    # 召回链路（多源召回→合并→重排→打包）
+│   ├── hybrid-recall.mjs             # 混合检索（向量 + 词法）
+│   ├── rerank.mjs                    # 重排（按意图重新排序候选记忆）
+│   ├── replay-recall.mjs             # 原话回放召回
+│   ├── replay-store.mjs              # 原话存储读写
+│   ├── vector-store.mjs              # 向量存储读写
+│   ├── store.mjs                     # 结构化存储（Event / Decision / L0）
+│   ├── summarize.mjs                 # L0/L1 摘要/决策生成（调用 light model）
+│   ├── quality-gate.mjs              # 质量门（弱L0过滤、文本清洗、fallback生成）
+│   ├── entity-extractor.mjs          # 实体提取（文件路径、模型名、配置键、命令、端口号）
+│   ├── light-model.mjs               # Light model 适配（摘要/决策生成）
+│   ├── embedding-model.mjs           # Embedding 模型适配（向量化）
+│   ├── config.mjs                    # 配置加载
+│   └── paths.mjs                     # 路径管理
+│
+├── extensions/                       # OpenClaw 插件
+│   └── working-memory-core/
+│       ├── openclaw.plugin.json      # 插件描述
+│       ├── package.json              # npm 包
+│       ├── index.mjs                 # 主入口（tools + agent_end hook）
+│       ├── index.ts                  # TypeScript 源码
+│       └── live-ingest.ts            # 备用 ingest 入口
+│
+├── cli.mjs                           # CLI 入口（ingest / recall / replay / reindex）
+├── cli.ts                            # CLI TypeScript 源码
+│
+├── schemas/                          # 数据结构定义
+│   ├── decision.schema.json          # Decision 结构
+│   └── event.schema.json             # Event 结构
+│
+├── prompts/                          # L0/L1 生成 Prompt
+│
+├── docs/                             # 文档
+│   ├── architecture.md               # 架构总览
+│   ├── module-map.md                 # 模块说明
+│   ├── data-flow.md                  # 数据流详解
+│   ├── usage.md                      # 使用说明
+│   ├── roadmap.md                    # 路线图
+│   ├── decoupling-notes.md           # 解耦说明
+│   ├── release-checklist.md          # 发布检查清单
+│   ├── validation-summary.md         # 验证总结
+│   ├── validation-round-1.md         # 验证第1轮
+│   ├── validation-round-2.md         # 验证第2轮
+│   ├── validation-round-3.md         # 验证第3轮
+│   └── fixes-2026-03-10.md           # 2026-03-10 修复记录
+│
+├── src/                              # TypeScript 源码
+├── examples/                         # 脱敏示例数据
+└── scripts/                          # 工具脚本
 ```
 
 ---
@@ -456,33 +394,23 @@ OpenClaw 主运行时
 ## 依赖说明
 
 ### 运行环境
-建议至少具备：
+
 - Node.js 18+
-- 可调用的 embedding 接口
-- 可调用的 chat / light model 接口
 
 ### 依赖能力
-这个项目依赖的不是某个固定厂商，而是两类模型能力：
 
-#### 1）Embedding 模型
-用于：
-- 向量化记忆项
-- 做 hybrid recall 中的向量召回部分
+项目依赖两类模型能力（不绑定特定厂商）：
 
-#### 2）Light 模型
-用于：
-- 生成 L0 摘要
+**Embedding 模型** — 用于向量化记忆项，做 hybrid recall 中的向量召回部分
+
+**Light 模型** — 用于：
+- 生成 L0 短摘要
 - 生成 L1 决策草案
-- 做轻量提炼任务
+- 轻量提炼任务
 
-### 当前配置方式
-通过：
-- `config.json`
-- 或 `AGENT_MEMORY_CONFIG_PATH`
+### 配置方式
 
-来指定配置。
-
-示例结构：
+通过 `config.json` 或 `AGENT_MEMORY_CONFIG_PATH` 指定配置：
 
 ```json
 {
@@ -509,13 +437,11 @@ OpenClaw 主运行时
 ## 如何本地运行
 
 ### 1）准备配置文件
-把：
-- `config.example.json`
 
-复制成：
-- `config.json`
-
-并填入你自己的模型配置。
+```bash
+cp config.example.json config.json
+# 编辑 config.json，填入你的模型配置
+```
 
 ### 2）写入一轮对话
 
@@ -543,40 +469,9 @@ node cli.mjs reindex
 
 ---
 
-## 仓库结构说明
-
-```text
-agent-memory-architecture/
-├─ cli.mjs                      # 运行时 CLI 入口
-├─ cli.ts                       # TS 版本 CLI 源
-├─ config.example.json          # 配置模板
-├─ runtime/                     # 运行时模块
-│  ├─ ingest.mjs                # 写入链路
-│  ├─ recall.mjs                # 召回链路
-│  ├─ hybrid-recall.mjs         # 混合检索
-│  ├─ rerank.mjs                # 重排
-│  ├─ replay-recall.mjs         # 原话回放召回
-│  ├─ replay-store.mjs          # 原话存储
-│  ├─ vector-store.mjs          # 向量存储
-│  ├─ store.mjs                 # 结构化存储
-│  ├─ summarize.mjs             # L0 / L1 提炼
-│  ├─ entity-extractor.mjs      # 实体提取
-│  ├─ light-model.mjs           # 轻量模型适配
-│  ├─ embedding-model.mjs       # embedding 模型适配
-│  └─ config.mjs                # 配置与路径加载
-├─ src/                         # TypeScript 源码
-├─ schemas/                     # 结构 schema
-├─ prompts/                     # L0 / L1 prompt
-├─ docs/                        # 详细文档
-├─ examples/                    # 脱敏示例数据
-└─ scripts/                     # 预留脚本目录
-```
-
----
-
 ## 当前进度
 
-已完成或基本完成：
+### 已完成
 
 - [x] working-memory runtime 骨架
 - [x] event / decision / L0 / replay 基础写入链路
@@ -587,6 +482,11 @@ agent-memory-architecture/
 - [x] 路径 / 配置解耦
 - [x] 宿主环境公开化清理
 - [x] 文档骨架与公开版整理
+- [x] OpenClaw 插件接入（extensions/working-memory-core）
+- [x] agent_end hook 自动 ingest
+- [x] memory_search / memory_get 工具注册
+- [x] Session 类型过滤（cron/subagent 自动跳过）
+- [x] L0 自动合并机制（回溯5条 + 宽泛 topic 合并）
 - [x] **L0 检索召回修复**（2026-03-10）
 - [x] **编码问题修复**（2026-03-10）
 - [x] **质量门强化**（2026-03-10）
@@ -597,74 +497,65 @@ agent-memory-architecture/
 - [x] **embedding 配置修复**（2026-03-21）
 - [x] **实体提取器增强**（2026-03-21）
 - [x] **Runtime 模块全面优化**（2026-03-21）
-- [x] **Schema 定义完善**（2026-03-21）
-- [x] **TypeScript 源码同步**（2026-03-21）
-- [x] **文档体系完善**（2026-03-21）
+- [x] **cron/subagent 错误写入修复**（2026-03-21）
+- [x] **L0 合并窗口扩大**（2026-03-21）
 
-仍在继续优化：
+### 仍在继续优化
 
 - [ ] 中文检索质量
 - [ ] rerank 质量
 - [ ] 更强的 replay 覆盖
-- [ ] 更完整的 OpenClaw 深层接入方式
 - [ ] 更完善的插件化接入设计
+- [ ] 记忆可视化 UI
 
-### 最近更新
+---
 
-#### 🚀 2026-03-21 架构全面优化
-完成了记忆架构的全面优化和修复：
+## 更新日志
+
+### 🚀 2026-03-21 架构全面优化 + cron 写入修复
 
 **核心修复**：
-1. **修复 embedding 配置读取失败** - 恢复向量检索功能，混合召回能力完全恢复
-2. **扩展实体提取器** - 支持 .mjs 文件和更多模型名提取，提升 L1/L2 关联准确性
-3. **优化 ingest 重试逻辑** - 移除冗余代码，提升代码可维护性
-4. **Runtime 模块全面更新** - 14 个核心模块优化（config、paths、quality-gate、recall、rerank、store、summarize、vector-store 等）
-5. **Schema 定义完善** - decision 和 event 结构优化
-6. **TypeScript 源码同步** - 6 个源码文件类型定义更新
-7. **文档体系完善** - 12 个文档文件更新
 
-**技术提升**：
-- ✅ 向量检索功能完全恢复
-- ✅ 实体提取完整性提升
-- ✅ 代码质量和可维护性增强
-- ✅ 文档完整性提高
-- ✅ 类型定义更加严谨
+1. **修复 cron/subagent 错误写入记忆** — 根因：抖音监控 cron 每3分钟执行一次，每次 agent_end hook 都把结果写入记忆，导致 173 条 L0 + 201 条 Event + 93 条 Decision 被错误灌入。修复：在 hook 层拦截 cron/subagent session，不再写入。
+2. **修复 embedding 配置读取失败** — 恢复向量检索功能，混合召回能力完全恢复
+3. **扩展实体提取器** — 支持 .mjs 文件和更多模型名提取
+4. **L0 合并窗口扩大** — 从只看最后1条改为回溯最近5条，解决不同 session 交叉写入时合并失效
+5. **Runtime 模块全面更新** — 14 个核心模块优化
+6. **质量门增强** — 新增 fallback pattern 检测，泛化 actionType + "已记录" 判定为弱 L0
 
-详细更新记录请查看：[2026-03-21 更新日志](./CHANGELOG-2026-03-21.md)
+**涉及文件**：
+- `extensions/working-memory-core/index.mjs` — 新增 cron/subagent 过滤
+- `extensions/working-memory-core/live-ingest.ts` — 新增 cron/subagent 过滤
+- `runtime/store.mjs` — shouldMergeL0 回溯窗口扩大 + 抖音相关加入宽泛合并
+- `runtime/ingest.mjs` — shouldSkipL0Turn 过滤 cron 重复结果
+- `runtime/quality-gate.mjs` — isWeakL0 检测 fallback pattern
 
-#### 🎉 2026-03-14 重大更新
-完成了时间戳修复和模型支持扩展：
+### 🎉 2026-03-14 重大更新
 
-1. **修复时间戳问题（UTC+8）** - 解决 Node.js 系统时间慢 8 小时的问题，确保记录时间准确
-2. **添加 iflow/qwen3-max 支持** - 新增 iflow 模型作为 light model，支持自动回退到 gpt-5.2
-3. **验证自动记录功能** - 确认 agent_end hook 正常工作，记忆系统自动写入正常
-4. **增强调试日志** - 添加详细的 hook 触发日志，便于问题排查
+1. **修复时间戳问题（UTC+8）** — 解决 Node.js 系统时间慢 8 小时的问题
+2. **添加 iflow/qwen3-max 支持** — 新增 light model，支持自动回退
+3. **验证自动记录功能** — 确认 agent_end hook 正常工作
+4. **增强调试日志** — 添加 hook 触发日志
 
-详细更新记录请查看：[2026-03-14 更新日志](./CHANGELOG-2026-03-14.md)
+### 🔧 2026-03-10 生产环境修复
 
-#### 2026-03-10 生产环境修复
-完成了一轮重要的生产环境修复：
-
-1. **修复 L0 检索召回问题** - 降低检索阈值（0.1→0.05），增加话题关键词加权，修复检索返回空的问题
-2. **修复编码问题** - 统一所有存储文件为 UTF-8 编码，移除 BOM，清除乱码
-3. **清理 general 垃圾条目** - 从 1 个清理至 0 个，消除目录污染
-4. **强化质量门规则** - 禁止模糊表述（如"修复了bug"），强制实体化（文件名、端口号、参数）
-5. **优化 L0 创建频率** - 放宽过滤规则，保持合理的 L0/Event 比例
-6. **扩展实体提取** - 支持端口号、参数、更多模型名和错误类型
-
-详细修复记录请查看：[2026-03-10 修复记录](./docs/fixes-2026-03-10.md)
+1. **修复 L0 检索召回问题** — 降低检索阈值，增加话题关键词加权
+2. **修复编码问题** — 统一 UTF-8 编码，移除 BOM，清除乱码
+3. **清理 general 垃圾条目** — 消除目录污染
+4. **强化质量门规则** — 禁止模糊表述，强制实体化
+5. **扩展实体提取** — 支持端口号、参数、更多模型名和错误类型
 
 ---
 
 ## 这个项目适合谁
 
-适合：
+**适合**：
 - 想给 Agent 增强长期记忆能力的人
-- 想解决“摘要不够用，原话也想找回来”的问题的人
+- 想解决"摘要不够用，原话也想找回来"的问题的人
 - 想给 OpenClaw 做更强记忆层的人
 - 想研究分层记忆，而不是简单 RAG 记忆的人
 
-不太适合：
+**不太适合**：
 - 只想做最简单聊天记录 embedding 检索的人
 - 不需要结构化决策 / 原话回放的人
 - 不打算做本地运行和配置的人
@@ -674,7 +565,6 @@ agent-memory-architecture/
 ## 文档索引
 
 ### 核心文档
-- **[架构深度剖析](./ARCHITECTURE-DEEP-DIVE.md)** ⭐⭐⭐ - 全面深度剖析记忆架构
 - [架构总览](./docs/architecture.md)
 - [模块说明](./docs/module-map.md)
 - [数据流](./docs/data-flow.md)
@@ -685,203 +575,19 @@ agent-memory-architecture/
 - [解耦说明](./docs/decoupling-notes.md)
 - [发布检查清单](./docs/release-checklist.md)
 - [验证总结](./docs/validation-summary.md)
-- **[2026-03-10 修复记录](./docs/fixes-2026-03-10.md)** ⭐
+- [2026-03-10 修复记录](./docs/fixes-2026-03-10.md)
 
-### 内部开发记录
+### 验证记录
 - [验证第 1 轮](./docs/validation-round-1.md)
 - [验证第 2 轮](./docs/validation-round-2.md)
 - [验证第 3 轮](./docs/validation-round-3.md)
+
+### 更新日志
+- [2026-03-21 更新日志](./CHANGELOG-2026-03-21.md)
+- [2026-03-14 更新日志](./CHANGELOG-2026-03-14.md)
 
 ---
 
 ## 一句话总结
 
-如果用一句话概括这个项目：
-
 > **这是一套适配 Agent / OpenClaw 的分层记忆架构：把摘要、决策、事件和原话分层存储，在查询时按需召回，再把最相关记忆注入当前上下文。**
-# GitHub 项目更新总结
-
-## 更新时间
-2026-03-10 23:48
-
-## 更新内容
-
-### 1. 核心代码修复
-
-#### 1.1 `runtime/quality-gate.mjs`
-- ✅ 新增 `sanitizeMemoryText()` 函数处理编码问题
-- ✅ 强化 `isWeakL0()` 检测模糊表述（11种模糊模式）
-- ✅ 增强 `normalizeL0()` 和 `normalizeDecisionPayload()` 使用 `sanitizeMemoryText`
-- ✅ 新增 `pickTimelineHook()` 函数
-
-#### 1.2 `runtime/entity-extractor.mjs`
-- ✅ 扩展 `MODEL_RE` 支持更多模型名（custom-1/gpt-5.2, duojie/gpt-5.4, zai/glm-4.7 等）
-- ✅ 扩展 `CONFIG_RE` 支持更多配置文件（IDENTITY.md, TOOLS.md, HEARTBEAT.md 等）
-- ✅ 扩展 `COMMAND_RE` 支持 OpenClaw 命令（openclaw status, openclaw gateway restart 等）
-- ✅ 扩展 `ERROR_RE` 支持更多错误类型（503, HTTP 400, API rate limit, FailoverError）
-- ✅ 新增端口号提取（port:12334）
-- ✅ 新增参数提取（maxResults, minScore, temperature 等）
-- ✅ 实体提取上限从 16 提升到 20
-
-#### 1.3 `scripts/fix-encoding.mjs`（新建）
-- ✅ 批量修复存储文件编码问题
-- ✅ 移除 BOM 标记
-- ✅ 清理乱码字符（�, \uFFFD 等）
-- ✅ 递归处理所有字符串字段
-
-### 2. 文档更新
-
-#### 2.1 `README.md`
-- ✅ 添加"最近更新（2026-03-10）"章节
-- ✅ 列出 6 项重要修复
-- ✅ 更新"当前进度"清单（新增 4 个已完成项）
-- ✅ 添加修复记录文档链接
-
-#### 2.2 `docs/roadmap.md`
-- ✅ 更新"阶段 4 —— 检索质量优化"状态
-- ✅ 标记 6 项已完成的优化
-
-#### 2.3 `docs/fixes-2026-03-10.md`（新建）
-- ✅ 详细记录所有修复内容
-- ✅ 包含问题描述、修复方案、代码示例
-- ✅ 包含修复效果验证数据
-- ✅ 包含技术细节和后续优化方向
-
-### 3. 项目结构
-
-```
-agent-memory-architecture/
-├─ README.md                    ✅ 已更新
-├─ docs/
-│  ├─ roadmap.md                ✅ 已更新
-│  └─ fixes-2026-03-10.md       ✅ 新建
-├─ runtime/
-│  ├─ quality-gate.mjs          ✅ 已更新
-│  └─ entity-extractor.mjs      ✅ 已更新
-└─ scripts/
-   └─ fix-encoding.mjs          ✅ 新建
-```
-
----
-
-## 修复亮点
-
-### 🎯 质量门强化
-**修复前**：
-```
-"修改了数据库端口并测试成功"
-```
-
-**修复后**：
-```
-"将 docker-compose.yml 的 PostgreSQL 端口 5432 改为 543"
-```
-
-### 🔍 检索召回修复
-**修复前**：
-- 查询"记忆架构问题"返回 `l0Items: []`
-
-**修复后**：
-- 查询"最近做了什么"成功召回 L0 条目
-- 话题关键词加权生效
-
-### 🧹 编码问题修复
-**修复前**：
-```json
-{
-  "summaryShort": "会话推进 | �Ự�ƽ� | �Ѽ�¼"
-}
-```
-
-**修复后**：
-```json
-{
-  "summaryShort": "会话推进 | 会话状态 | 已记录"
-}
-```
-
-### 📊 数据质量提升
-
-| 指标 | 修复前 | 修复后 |
-|------|--------|--------|
-| General 垃圾条目 | 1 | 0 ✅ |
-| 编码乱码 | 存在 | 已清除 ✅ |
-| L0 检索召回 | 失败 | 成功 ✅ |
-| 实体提取上限 | 16 | 20 ✅ |
-
----
-
-## 技术改进
-
-### 1. 编码处理
-- 统一 UTF-8 编码（无 BOM）
-- 自动清理乱码字符
-- 原子写入保证数据完整性
-
-### 2. 质量门规则
-- 11 种模糊表述检测模式
-- 强制实体化（文件名、端口号、参数）
-- 多层次验证（长度、格式、内容）
-
-### 3. 实体提取
-- 支持 20+ 种模型名
-- 支持 10+ 种配置文件
-- 支持端口号和参数提取
-- 支持 OpenClaw 特定命令
-
-### 4. 检索优化
-- 降低阈值提高召回率（0.1→0.05）
-- 话题关键词加权（记忆+1.5, 架构+1.2, 问题+1.0）
-- 增加 `timelineKey` 检索字段
-- 无匹配时返回最近 8 条
-
----
-
-## 验证结果
-
-### ✅ 所有测试通过
-
-1. **语法检查**：`node --check` 通过
-2. **记忆写入**：ingest 测试通过
-3. **L0 检索**：recall 测试通过
-4. **编码修复**：fix-encoding 脚本执行成功
-5. **质量门**：最新 Decision 符合规范
-
----
-
-## 下一步
-
-### 短期
-- [ ] 继续优化中文词法召回
-- [ ] 提升 rerank 质量
-- [ ] 增加更多实体类型提取
-
-### 中期
-- [ ] 实现自动质量门报告
-- [ ] 增加记忆质量评分
-- [ ] 支持记忆去重与合并
-
-### 长期
-- [ ] 建立记忆质量基准测试集
-- [ ] 实现记忆可视化 UI
-- [ ] 支持多语言记忆
-
----
-
-## 贡献者
-
-- **主要修复**：Kiro (AI Assistant)
-- **需求提出与验证**：小锦 (User)
-- **项目维护**：小锦
-
----
-
-## 相关链接
-
-- [详细修复记录](./docs/fixes-2026-03-10.md)
-- [路线图](./docs/roadmap.md)
-- [架构总览](./docs/architecture.md)
-
----
-
-**更新完成！项目已同步最新修复，可以推送到 GitHub。** 🚀
