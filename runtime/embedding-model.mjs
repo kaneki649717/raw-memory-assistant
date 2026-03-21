@@ -1,22 +1,15 @@
-import fs from "node:fs";
-
-const CONFIG_PATH = "C:/Users/1/.openclaw/openclaw.json";
-
-function readConfig() {
-  return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
-}
+import { loadProjectConfig } from "./config.mjs";
 
 export function resolveEmbeddingConfig() {
-  const config = readConfig();
-  const ms = config?.agents?.defaults?.memorySearch;
-  const remote = ms?.remote;
-  if (!remote?.baseUrl || !remote?.apiKey || !ms?.model) {
-    throw new Error("memorySearch remote embedding config missing in openclaw.json");
+  const config = loadProjectConfig();
+  const embedding = config?.models?.embedding;
+  if (!embedding?.baseUrl || !embedding?.apiKey || !embedding?.model) {
+    throw new Error("embedding model config missing in config.json or AGENT_MEMORY_CONFIG_PATH");
   }
   return {
-    baseUrl: String(remote.baseUrl).replace(/\/$/, ""),
-    apiKey: String(remote.apiKey),
-    model: String(ms.model),
+    baseUrl: String(embedding.baseUrl).replace(/\/$/, ""),
+    apiKey: String(embedding.apiKey),
+    model: String(embedding.model),
   };
 }
 

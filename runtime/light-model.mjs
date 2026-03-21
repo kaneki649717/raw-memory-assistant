@@ -1,32 +1,15 @@
-import fs from "node:fs";
-
-const CONFIG_PATH = "C:/Users/1/.openclaw/openclaw.json";
-
-function readConfig() {
-  return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
-}
+import { loadProjectConfig } from "./config.mjs";
 
 export function resolveLightModelConfig() {
-  const config = readConfig();
-  
-  // 优先使用 iflow/qwen3-max，如果不存在则使用 custom-1/gpt-5.2
-  let provider = config?.models?.providers?.["iflow"];
-  let model = provider?.models?.find?.((m) => m.id === "qwen3-max");
-  
-  if (!provider?.baseUrl || !provider?.apiKey || !model?.id) {
-    // 回退到 custom-1/gpt-5.2
-    provider = config?.models?.providers?.["custom-1"];
-    model = provider?.models?.find?.((m) => m.id === "gpt-5.2") ?? provider?.models?.[0];
+  const config = loadProjectConfig();
+  const light = config?.models?.light;
+  if (!light?.baseUrl || !light?.apiKey || !light?.model) {
+    throw new Error("light model config missing in config.json or AGENT_MEMORY_CONFIG_PATH");
   }
-  
-  if (!provider?.baseUrl || !provider?.apiKey || !model?.id) {
-    throw new Error("light model config missing: need iflow/qwen3-max or custom-1/gpt-5.2 in openclaw.json");
-  }
-  
   return {
-    baseUrl: String(provider.baseUrl).replace(/\/$/, ""),
-    apiKey: String(provider.apiKey),
-    model: String(model.id),
+    baseUrl: String(light.baseUrl).replace(/\/$/, ""),
+    apiKey: String(light.apiKey),
+    model: String(light.model),
   };
 }
 

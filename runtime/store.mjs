@@ -1,48 +1,18 @@
 import fs from "node:fs";
-import { L0_STORE_FILE, STORE_DIR, STORE_FILE } from "./paths.mjs";
+import { STORE_FILE } from "./paths.mjs";
 
-function ensureDir() {
-  fs.mkdirSync(STORE_DIR, { recursive: true });
-}
-
-function safeParseJson(filePath, fallbackValue) {
-  try {
-    // 【修复】明确使用 UTF-8 BOM 处理
-    const raw = fs.readFileSync(filePath, "utf-8");
-    // 移除可能的 BOM
-    const cleaned = raw.replace(/^\uFEFF/, "");
-    return JSON.parse(cleaned);
-  } catch {
-    return fallbackValue;
-  }
-}
-
-function writeJsonAtomic(filePath, data) {
-  ensureDir();
-  const tmpPath = `${filePath}.tmp-${process.pid}-${Date.now()}`;
-  // 【修复】确保 UTF-8 写入，不带 BOM
-  const json = JSON.stringify(data, null, 2);
-  fs.writeFileSync(tmpPath, json, { encoding: "utf-8" });
-  fs.renameSync(tmpPath, filePath);
-}
+const L0_STORE_FILE = STORE_FILE.replace(/working-memory-store\.json$/, "working-memory-l0.json");
 
 function ensureStoreFile(filePath, initialValue) {
-  ensureDir();
+  fs.mkdirSync(filePath.replace(/\/[^/]+$/, ""), { recursive: true });
   if (!fs.existsSync(filePath)) {
-    writeJsonAtomic(filePath, initialValue);
-    return initialValue;
+    fs.writeFileSync(filePath, JSON.stringify(initialValue, null, 2), "utf-8");
   }
-  const parsed = safeParseJson(filePath, null);
-  if (!parsed || typeof parsed !== "object") {
-    writeJsonAtomic(filePath, initialValue);
-    return initialValue;
-  }
-  return parsed;
 }
 
 function ensureStore() {
-  ensureStoreFile(STORE_FILE, { version: 2, events: [], decisions: [] });
-  ensureStoreFile(L0_STORE_FILE, { version: 2, items: [] });
+  ensureStoreFile(STORE_FILE, { version: 1, events: [], decisions: [] });
+  ensureStoreFile(L0_STORE_FILE, { version: 1, items: [] });
 }
 
 function normalize(text) {
@@ -122,39 +92,24 @@ function rankMatches(items, buildHaystack, query, limit) {
     .map((entry) => entry.item);
 }
 
-function normalizeStoreShape(store) {
-  return {
-    version: Number(store?.version) || 2,
-    events: Array.isArray(store?.events) ? store.events : [],
-    decisions: Array.isArray(store?.decisions) ? store.decisions : [],
-  };
-}
-
-function normalizeL0Shape(store) {
-  return {
-    version: Number(store?.version) || 2,
-    items: Array.isArray(store?.items) ? store.items : [],
-  };
-}
-
 export function loadStore() {
   ensureStore();
-  return normalizeStoreShape(ensureStoreFile(STORE_FILE, { version: 2, events: [], decisions: [] }));
+  return JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
 }
 
 export function saveStore(store) {
   ensureStore();
-  writeJsonAtomic(STORE_FILE, normalizeStoreShape(store));
+  fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2), "utf-8");
 }
 
 export function loadL0Store() {
   ensureStore();
-  return normalizeL0Shape(ensureStoreFile(L0_STORE_FILE, { version: 2, items: [] }));
+  return JSON.parse(fs.readFileSync(L0_STORE_FILE, "utf-8"));
 }
 
 export function saveL0Store(store) {
   ensureStore();
-  writeJsonAtomic(L0_STORE_FILE, normalizeL0Shape(store));
+  fs.writeFileSync(L0_STORE_FILE, JSON.stringify(store, null, 2), "utf-8");
 }
 
 export function appendEvent(event) {
@@ -169,58 +124,8 @@ export function appendDecision(decision) {
   saveStore(store);
 }
 
-function normalizeCompact(text) {
-  return String(text || "").replace(/\s+/g, " ").trim().toLowerCase();
-}
-
-function similarSummary(a, b) {
-  const x = normalizeCompact(a);
-  const y = normalizeCompact(b);
-  if (!x || !y) return false;
-  if (x === y) return true;
-  if (x.includes(y) || y.includes(x)) return true;
-  return false;
-}
-
-function shouldMergeL0(existing, item) {
-  if (!existing || !item) return false;
-  if ((existing.topicKey || "") !== (item.topicKey || "")) return false;
-  if ((existing.timelineKey || "") !== (item.timelineKey || "")) return false;
-
-  const broadMergeTopics = new Set([
-    "会话推进",
-    "openclaw",
-    "身份设定",
-    "用户设定",
-    "工具偏好",
-    "心跳规则",
-    "启动流程",
-    "模型配置",
-    "会话状态",
-    "whatsapp",
-  ]);
-
-  if (broadMergeTopics.has(String(existing.topicKey || ""))) return true;
-  if ((existing.actionType || "") !== (item.actionType || "")) return false;
-  return similarSummary(existing.summaryShort, item.summaryShort);
-}
-
 export function appendL0Item(item) {
   const store = loadL0Store();
-  const last = store.items[store.items.length - 1];
-  if (shouldMergeL0(last, item)) {
-    store.items[store.items.length - 1] = {
-      ...last,
-      summaryShort: item.summaryShort.length >= last.summaryShort.length ? item.summaryShort : last.summaryShort,
-      importance: Math.max(Number(last.importance) || 0, Number(item.importance) || 0),
-      entities: Array.from(new Set([...(last.entities || []), ...(item.entities || [])])).slice(0, 12),
-      resultTag: item.resultTag || last.resultTag,
-      timestamp: item.timestamp || last.timestamp,
-      turnKey: item.turnKey || last.turnKey,
-    };
-    saveL0Store(store);
-    return;
-  }
   store.items.push(item);
   saveL0Store(store);
 }
@@ -238,18 +143,6 @@ export function readRecentDecisions(limit = 12) {
 export function readRecentL0Items(limit = 12) {
   const store = loadL0Store();
   return store.items.slice(-limit).reverse();
-}
-
-export function loadAllEvents() {
-  return loadStore().events;
-}
-
-export function loadAllDecisions() {
-  return loadStore().decisions;
-}
-
-export function loadAllL0Items() {
-  return loadL0Store().items;
 }
 
 export function findEventsByEntity(query, limit = 8) {
@@ -274,45 +167,10 @@ export function findDecisionsByEntity(query, limit = 8) {
 
 export function findL0ByQuery(query, limit = 8) {
   const store = loadL0Store();
-  
-  // 【优化】增强中文匹配，多字段检索
-  const matches = [...store.items].reverse()
-    .map((item) => {
-      const haystack = [
-        item.summaryShort, 
-        item.topic ?? "", 
-        item.actionType ?? "", 
-        ...(item.entities ?? []), 
-        item.resultTag ?? "",
-        item.topicKey ?? "",
-        item.timelineKey ?? "",
-      ].join("\n");
-      
-      const score = queryMatchScore(query, haystack);
-      
-      // 【新增】话题关键词加权
-      const q = normalize(query);
-      if (q.includes("记忆") && (item.topicKey || "").includes("记忆")) {
-        return { item, score: score + 1.5 };
-      }
-      if (q.includes("架构") && (item.summaryShort || "").toLowerCase().includes("架构")) {
-        return { item, score: score + 1.2 };
-      }
-      if (q.includes("问题") && (item.summaryShort || "").toLowerCase().includes("问题")) {
-        return { item, score: score + 1.0 };
-      }
-      
-      return { item, score };
-    })
-    .filter((entry) => entry.score > 0.05)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map((entry) => entry.item);
-  
-  // 【修复】如果完全没匹配到，返回最近的几条
-  if (matches.length === 0) {
-    return store.items.slice(-Math.min(limit, 8)).reverse();
-  }
-  
-  return matches;
+  return rankMatches(
+    [...store.items].reverse(),
+    (item) => [item.summaryShort, item.topic ?? "", item.actionType ?? "", ...(item.entities ?? []), item.resultTag ?? ""].join("\n"),
+    query,
+    limit,
+  );
 }
