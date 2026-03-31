@@ -1,1 +1,273 @@
-# 鍒嗗眰 Agent 璁板繂鏋舵瀯锛堥€傞厤 OpenClaw锛? > 涓€濂楅潰鍚戞櫤鑳戒綋闀挎湡涓婁笅鏂囩殑鍒嗗眰璁板繂绯荤粺锛氫笉浠呰兘璁?鎽樿"锛岃繕鑳借"鍐崇瓥""浜嬩欢"鍜?鍘熻瘽"锛屽苟鍦ㄦ煡璇㈡椂鎸夐渶鍙洖锛屽啀鎶婃渶鐩稿叧璁板繂娉ㄥ叆褰撳墠瀵硅瘽涓婁笅鏂囥€? ---  ## 杩欐槸浠€涔? 杩欐槸涓€涓潰鍚?Agent / OpenClaw 鍦烘櫙璁捐鐨?*鍒嗗眰璁板繂鏋舵瀯椤圭洰**銆? 瀹冧笉鏄紶缁熼偅绉?鎶婅亰澶╄褰曞叏鎵旇繘鍚戦噺搴擄紝鐒跺悗闈?embedding 鍋氱浉浼兼绱?鐨勭畝鍗曡蹇嗘柟妗堬紝鑰屾槸鎶婅蹇嗘媶鎴愪笉鍚屽眰锛? - **L0锛氱煭鎽樿灞?* 鈥斺€?蹇€熺粰妯″瀷涓€涓?杩欎竴娈靛彂鐢熶簡浠€涔?鐨勫鑸鍥?- **L1锛氬喅绛栧眰** 鈥斺€?淇濆瓨鍙互澶嶇敤鐨勫喅瀹氥€佸師鍥犲拰缁撴灉 - **L2锛氬師璇濆洖鏀惧眰** 鈥斺€?淇濆瓨 user / assistant 鐨勫師濮嬪洖鍚堟枃鏈紝鏀寔鍥炴斁鍘熻瘽璇佹嵁 - **浜嬩欢灞傦紙Event锛?* 鈥斺€?琛ㄨ揪鏃堕棿绾裤€佽繃绋嬫帹杩涘拰闃舵鍙樺寲 - **娣峰悎妫€绱紙Hybrid Retrieval锛?* 鈥斺€?鍚戦噺妫€绱?+ 璇嶆硶妫€绱?- **閲嶆帓锛圧erank锛?* 鈥斺€?鏍规嵁鏌ヨ鎰忓浘閲嶆柊鎺掑簭鍊欓€夎蹇?- **涓婁笅鏂囨敞鍏ワ紙Runtime Injection锛?* 鈥斺€?鎶婃渶鐩稿叧璁板繂鎵撳寘娉ㄥ叆褰撳墠杩愯鏃朵笂涓嬫枃  杩欏涓滆タ鐨勭洰鏍囷紝涓嶆槸"璁╂ā鍨嬭鏇村瀛?锛岃€屾槸锛? > **璁╂ā鍨嬪湪闇€瑕佹椂鎷垮埌"姝ｇ‘绫诲瀷鐨勮蹇?銆?*  ---  ## 杩欎釜椤圭洰瑙ｅ喅浠€涔堥棶棰? 浼犵粺 Agent memory 甯歌闂锛? 1. **鎵€鏈夎蹇嗛兘娣峰湪涓€璧?*    - 鍐崇瓥銆佷簨浠躲€佸師璇濄€佹憳瑕佹病鏈夊尯鍒? 2. **鍙兘鎵剧浉浼兼枃鏈紝涓嶈兘鐞嗚В璁板繂瑙掕壊**    - 闂?涓婃鎴戜滑瀹氫簡浠€涔堟柟妗?    - 鍜岄棶"褰撴椂鍘熻瘽鎬庝箞璇寸殑"    - 瀹為檯闇€瑕佺殑鏄袱绉嶄笉鍚岀殑璁板繂  3. **浼氳瘽涓€闀垮氨鍙兘闈犲帇缂╂憳瑕?*    - 鎽樿浼氫涪缁嗚妭    - 灏ゅ叾瀹规槗涓㈡帀"涓轰粈涔堣繖涔堝仛"鍜?鍘熻瘽璇佹嵁"  4. **鍚姩鏃剁‖璇诲ぇ璁板繂鏂囦欢锛屾薄鏌撲笂涓嬫枃**    - 浼氭氮璐逛笂涓嬫枃绐楀彛    - 涔熶細鎶婁笉鐩稿叧鐨勬棫淇℃伅寮哄杩涘綋鍓嶅璇? 杩欎釜椤圭洰鐨勬牳蹇冩€濊矾灏辨槸锛? - 涓嶅湪鍚姩鏃剁‖璇诲ぇ璁板繂鏂囦欢 - 鏀规垚**鎸夐渶 recall** - 涓嶆妸鎵€鏈夎蹇嗘墎骞冲寲 - 鏀规垚**鎸夊眰瀛樺偍銆佹寜灞傚彫鍥炪€佺粺涓€閲嶆帓銆佺粺涓€娉ㄥ叆**  ---  ## 涓轰粈涔堣繖涓嶆槸鏅€?RAG  寰堝浜虹涓€鐪肩湅鍒?鍚戦噺妫€绱?+ 璁板繂 + 娉ㄥ叆涓婁笅鏂?锛屼細瑙夊緱杩欏氨鏄櫘閫?RAG銆? 浣嗚繖濂楃郴缁熷拰鏅€?RAG 鐨勬牳蹇冨尯鍒緢鏄庢樉锛? ### 鏅€?RAG 鏇村儚浠€涔? 鏅€?RAG 鐨勫吀鍨嬫€濊矾閫氬父鏄細  - 鎶婃枃妗ｅ垏鍧?- 鍋?embedding - 鐩镐技妫€绱?- 鎶婃绱㈢粨鏋滄嫾杩?prompt  瀹冩洿閫傚悎锛?- 鐭ヨ瘑闂瓟 - 鏂囨。闂瓟 - 澶栭儴璧勬枡妫€绱? ### 杩欏绯荤粺鏇村儚浠€涔? 杩欏绯荤粺鏇村儚锛? > **闈㈠悜瀵硅瘽杩炵画鎬с€佷换鍔℃帹杩涘拰闀挎湡鍗忎綔鐨?鍒嗗眰宸ヤ綔璁板繂绯荤粺"**  瀹冨拰鏅€?RAG 鐨勪笉鍚岀偣锛? | 缁村害 | 鏅€?RAG | 鏈郴缁?| |------|---------|--------| | 瀛樺偍缁撴瀯 | 鎵佸钩鍖栧悜閲忓簱 | L0 鎽樿 / L1 鍐崇瓥 / L2 鍘熻瘽 / Event 鏃堕棿绾匡紝鍒嗗眰瀛樺偍 | | 妫€绱㈡柟寮?| 鍙湅鏂囨湰鐩镐技搴?| 鎸夎蹇嗚鑹插彫鍥?+ 鍚戦噺 + 璇嶆硶 + 閲嶆帓 | | 鏈嶅姟鍦烘櫙 | 鍗曟闂瓟 | 闀挎湡鍗忎綔銆佷换鍔℃帹杩涖€佸璇濊繛缁€?| | 鍐欏叆閾捐矾 | 閫氬父涓嶅叧娉?| 瀹屾暣 ingest锛氬疄浣撴彁鍙?鈫?鎽樿鐢熸垚 鈫?缁撴瀯鍖栧啓鍏?鈫?绱㈠紩鏇存柊 | | 杈撳嚭褰㈠紡 | 妫€绱㈢粨鏋滅洿鎺ユ嫾鎺?| Context Pack 鎵撳寘 + 鍒嗘《杈撳嚭 |  鎵€浠ユ洿鍑嗙‘鍦拌锛? > **瀹冨彲浠ョ敤鍒?RAG 鐨勬绱㈣兘鍔涳紝浣嗗畠鏈韩涓嶆槸"鏅€?RAG"锛岃€屾槸涓€濂楀垎灞傜殑 Agent Working Memory銆?*  ---  ## 鏍稿績鍒嗗眰璁捐  ### L0锛氱煭鎽樿灞? - 蹇€熸敞鍏ヤ笂涓嬫枃 - 缁欐ā鍨嬩竴涓?杩欎竴娈垫渶鏍稿績鍙戠敓浜嗕粈涔?鐨勫鑸鍥?- 閫傚悎鍥炵瓟锛氭渶杩戜富绾挎槸浠€涔堬紵杩欎竴娈靛ぇ姒傚湪鍋氫粈涔堬紵  **绀轰緥**锛?```json {   "id": "l0_xxx",   "topic": "璁板繂绯荤粺",   "actionType": "璁板繂璁捐",   "summaryShort": "璁板繂璁捐 | 璁板繂绯荤粺 | 淇 embedding 閰嶇疆璇诲彇澶辫触锛屾仮澶嶅悜閲忔绱?,   "resultTag": "鏂规宸插舰鎴?,   "importance": 0.7 } ```  ### L1锛氬喅绛栧眰  - 淇濆瓨缁撴瀯鍖栧喅绛?- 寮鸿皟锛氬仛浜嗕粈涔堝喅瀹氥€佷负浠€涔堣繖涔堝仛銆佺粨鏋滃浣?- 閫傚悎鍥炵瓟锛氫笂娆℃垜浠渶缁堝喅瀹氭€庝箞鍋氾紵涓轰粈涔堜笉璧版棫鏂规锛? **绀轰緥**锛?```json {   "id": "dec_xxx",   "title": "璁板繂瀛樺偍璺緞閲嶆瀯",   "decisionText": "灏嗗瓨鍌ㄦ牴鐩綍浠?./data 鏀逛负 workspace 涓?memory/working-memory/store",   "whyText": "涓?OpenClaw workspace 缁撴瀯瀵归綈锛岄伩鍏嶅閮ㄨ矾寰勪緷璧?,   "outcomeText": "璺緞瑙ｈ€﹀畬鎴愶紝鍙嫭绔嬭繍琛?,   "files": ["store.mjs", "paths.mjs"],   "entities": ["working-memory", "store"] } ```  ### L2锛氬師璇濆洖鏀惧眰  - 淇濆瓨鍘熷 user / assistant 鍥炲悎 - 褰撶敤鎴烽棶"鍘熻瘽鏄粈涔?鏃讹紝鍥炴斁鍘熷鏂囨湰璇佹嵁 - 閫傚悎鍥炵瓟锛氫綘褰撴椂鍘熻瘽鎬庝箞璇寸殑锛熼偅娈佃亰澶╁師鏂囨槸浠€涔堬紵  ### Event锛氫簨浠跺眰  - 琛ㄨ揪鏃堕棿绾裤€佹帹杩涜繃绋嬨€侀樁娈靛彉鍖?- 鐢ㄦ潵琛ュ厖"涓嶆槸鏈€缁堢粨璁猴紝浣嗗€煎緱璁颁綇"鐨勮繃绋嬩俊鎭?- 閫傚悎鍥炵瓟锛氳繖鍑犲ぉ鏄€庝箞涓€姝ヤ竴姝ユ帹杩涘埌杩欓噷鐨勶紵  **绀轰緥**锛?```json {   "id": "evt_xxx",   "topic": "OpenClaw",   "actionType": "閰嶇疆淇敼",   "summaryShort": "閰嶇疆淇敼 | OpenClaw | 淇 embedding baseUrl 閰嶇疆",   "resultTag": "宸茶皟鏁?,   "entities": ["embedding-model.mjs", "config.json"],   "timelineKey": "timeline:openclaw:2026-03-21" } ```  ---  ## 鏁翠綋鏁版嵁娴? ### 涓€寮犲浘鐪嬫噦  ```text 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?                   鍐欏叆閾捐矾 (Ingest)                   鈹?鈹?                                                      鈹?鈹? 鐢ㄦ埛鍥炲悎 + 鍔╂墜鍥炲悎                                   鈹?鈹?      鈫?                                              鈹?鈹? 瀹炰綋鎻愬彇 (entity-extractor)                           鈹?鈹?      鈫?                                              鈹?鈹? L0 鎽樿鐢熸垚 (summarize + quality-gate)               鈹?鈹?      鈫?                                              鈹?鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?                 鈹?鈹? 鈹? 鍐欏叆 Event  鈫?store.json       鈹?                 鈹?鈹? 鈹? 鍐欏叆 L0     鈫?working-memory-l0.json              鈹?鈹? 鈹? 鍐欏叆 Decision 鈫?store.json (鎸夐渶) 鈹?               鈹?鈹? 鈹? 鍐欏叆 Replay  鈫?replay-store.json 鈹?               鈹?鈹? 鈹? 鏇存柊鍚戦噺绱㈠紩 鈫?vector-store.json 鈹?               鈹?鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?                 鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?                   璇诲彇閾捐矾 (Recall)                   鈹?鈹?                                                      鈹?鈹? 鐢ㄦ埛鏌ヨ                                              鈹?鈹?      鈫?                                              鈹?鈹? 鎰忓浘鍒嗙被                                              鈹?鈹?      鈫?                                              鈹?鈹? 澶氭簮鍙洖                                              鈹?鈹?   鈹溾攢 L0 鐭憳瑕佸彫鍥?                                   鈹?鈹?   鈹溾攢 L1 鍐崇瓥鍙洖                                      鈹?鈹?   鈹溾攢 Event 鏃堕棿绾垮彫鍥?                                鈹?鈹?   鈹溾攢 L2 鍘熻瘽鍥炴斁鍙洖                                  鈹?鈹?   鈹斺攢 Hybrid 娣峰悎妫€绱?(鍚戦噺 + 璇嶆硶)                    鈹?鈹?      鈫?                                              鈹?鈹? 缁撴灉缁熶竴鍚堝苟 (Bundle)                                 鈹?鈹?      鈫?                                              鈹?鈹? Rerank 閲嶆帓                                          鈹?鈹?      鈫?                                              鈹?鈹? Context Pack 涓婁笅鏂囨墦鍖?                              鈹?鈹?      鈫?                                              鈹?鈹? 娉ㄥ叆褰撳墠妯″瀷涓婁笅鏂?                                   鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?```  ### 鍐欏叆璇︾粏娴佺▼  ```text 鐢ㄦ埛鍥炲悎 + 鍔╂墜鍥炲悎   鈫?sanitizeMemoryText() 鈥?娓呮礂鏂囨湰   鈫?extractEntities() + inferActionType() 鈥?鎻愬彇瀹炰綋銆佹帹鏂姩浣滅被鍨?  鈫?chooseTopic() 鈥?閫夋嫨璇濋 (OpenClaw / 鎶栭煶鐩稿叧 / 璁板繂绯荤粺 / ...)   鈫?shouldSkipL0Turn() 鈥?璺宠繃鏃犳剰涔夊洖鍚?(闂€?/ 绾‘璁?/ 绯荤粺娑堟伅)   鈫?generateL0WithModel() 鈥?璋冪敤 light model 鐢熸垚 L0 鎽樿   鈫?isWeakL0() + normalizeL0() 鈥?璐ㄩ噺闂ㄨ繃婊ゅ急鎽樿   鈫?maybeCreateDecision() 鈥?鎸夐渶璋冪敤 light model 鐢熸垚 L1 鍐崇瓥   鈫?appendEvent() + appendL0Item() + appendDecision() 鈥?鍐欏叆 store   鈫?appendReplayItem() 鈥?鍐欏叆鍘熻瘽鍥炴斁   鈫?indexTurnArtifacts() 鈥?澧為噺鏇存柊鍚戦噺绱㈠紩 ```  ### 鍘婚噸涓庡悎骞舵満鍒? 鍐欏叆鏃讹紝L0 灞傛湁鑷姩鍚堝苟閫昏緫锛? ```text appendL0Item(item)   鈫?鍥炴函鏈€杩?5 鏉¤褰?  鈫?shouldMergeL0(existing, item)?   鈹溾攢 topicKey 涓嶅悓 鈫?涓嶅悎骞讹紝鏂板缓   鈹溾攢 timelineKey 涓嶅悓 鈫?涓嶅悎骞讹紝鏂板缓   鈹溾攢 topicKey 鍦ㄥ娉涘悎骞堕泦鍚堜腑 (openclaw / 鎶栭煶鐩稿叧 / ...) 鈫?鍚堝苟   鈹斺攢 actionType 鐩稿悓 + summary 鐩镐技 鈫?鍚堝苟 ```  ### Session 绫诲瀷杩囨护  绯荤粺浼氭牴鎹?session 绫诲瀷鍐冲畾鏄惁鍐欏叆璁板繂锛? | Session 绫诲瀷 | 鏄惁鍐欏叆璁板繂 | 璇存槑 | |-------------|-------------|------| | `agent:main:main` | 鉁?鍐欏叆 | 涓讳細璇濓紝鎵€鏈夊璇濇甯歌褰?| | `agent:main:telegram:*` | 鉁?鍐欏叆 | Telegram 瀵硅瘽姝ｅ父璁板綍 | | `agent:main:cron:*` | 鉂?璺宠繃 | cron 瀹氭椂浠诲姟浜х敓鐨勯噸澶嶆€х粨鏋滀笉鍐欏叆 | | `agent:main:subagent:*` | 鉂?璺宠繃 | 瀛?agent 涓存椂浼氳瘽涓嶅啓鍏ヤ富璁板繂 |  > **璁捐鍘熷洜**锛歝ron 浠诲姟锛堝鎶栭煶鐩存挱鐩戞帶锛夋瘡鍑犲垎閽熸墽琛屼竴娆★紝姣忔閮戒骇鐢?鍧囨湭寮€鎾?涔嬬被鐨勯噸澶嶇粨鏋滐紝濡傛灉鍏ㄩ儴鍐欏叆璁板繂浼氫弗閲嶆薄鏌撴暟鎹€? ---  ## OpenClaw 鎻掍欢鎺ュ叆  ### 鎻掍欢鏄粈涔? 杩欎釜椤圭洰閫氳繃 OpenClaw 鐨勬彃浠舵満鍒讹紙`extensions/working-memory-core`锛夋帴鍏ュ涓伙紝瀹炵幇锛? - **瀵硅瘽缁撴潫鍚庤嚜鍔?ingest**锛氶€氳繃 `agent_end` hook 鑷姩灏嗘瘡杞璇濆啓鍏ヨ蹇?- **鏌ヨ鏃舵寜闇€ recall**锛氶€氳繃 `memory_search` / `memory_get` 宸ュ叿璁╂ā鍨嬩富鍔ㄥ彫鍥炶蹇?- **鑷姩鍘婚噸**锛氶€氳繃 hash 鏈哄埗闃叉鍚屼竴杞璇濊閲嶅鍐欏叆  ### 鎻掍欢鏂囦欢缁撴瀯  ```text extensions/working-memory-core/ 鈹溾攢鈹€ openclaw.plugin.json   # OpenClaw 鎻掍欢鎻忚堪鏂囦欢 鈹溾攢鈹€ package.json           # npm 鍖呮弿杩?鈹溾攢鈹€ index.mjs              # 涓诲叆鍙ｏ紙娉ㄥ唽 tools + agent_end hook锛?鈹溾攢鈹€ index.ts               # TypeScript 婧愮爜 鈹斺攢鈹€ live-ingest.ts         # 澶囩敤 ingest 鍏ュ彛 ```  ### Hook 鎺ュ叆娴佺▼  ```text agent_end 浜嬩欢瑙﹀彂   鈫?extractLatestTurn(messages) 鈥?鎻愬彇鏈€鍚庝竴杞?user/assistant 瀵硅瘽   鈫?sessionKey 杩囨护 鈥?璺宠繃 cron/subagent session   鈫?persistIncrementalTurn() 鈥?璋冪敤 CLI 杩涜 ingest   鈫?hash 鍘婚噸妫€鏌?鈥?鍚屼竴杞璇濅笉閲嶅鍐欏叆   鈫?execFileSync(cliPath, ["ingest", sessionKey, userText, assistantText]) ```  ### Tool 娉ㄥ唽  鎻掍欢娉ㄥ唽浜嗕袱涓伐鍏蜂緵妯″瀷鍦ㄥ璇濅腑涓诲姩璋冪敤锛? **memory_search**锛?```json {   "name": "memory_search",   "parameters": {     "query": "鎼滅储鍏抽敭璇?,     "maxResults": 8,     "minScore": 0.0   } } ```  **memory_get**锛?```json {   "name": "memory_get",   "parameters": {     "path": "working-memory/l0|decision|timeline|rawEvidence",     "from": 1,     "lines": 20   } } ```  ---  ## 浠撳簱缁撴瀯  ```text raw-memory-assistant/ 鈹溾攢鈹€ runtime/                          # 杩愯鏃舵牳蹇冩ā鍧?鈹?  鈹溾攢鈹€ ingest.mjs                    # 鍐欏叆閾捐矾锛堝疄浣撴彁鍙栤啋鎽樿鈫掑喅绛栤啋鍐欏叆鈫掔储寮曪級 鈹?  鈹溾攢鈹€ recall.mjs                    # 鍙洖閾捐矾锛堝婧愬彫鍥炩啋鍚堝苟鈫掗噸鎺掆啋鎵撳寘锛?鈹?  鈹溾攢鈹€ hybrid-recall.mjs             # 娣峰悎妫€绱紙鍚戦噺 + 璇嶆硶锛?鈹?  鈹溾攢鈹€ rerank.mjs                    # 閲嶆帓锛堟寜鎰忓浘閲嶆柊鎺掑簭鍊欓€夎蹇嗭級 鈹?  鈹溾攢鈹€ replay-recall.mjs             # 鍘熻瘽鍥炴斁鍙洖 鈹?  鈹溾攢鈹€ replay-store.mjs              # 鍘熻瘽瀛樺偍璇诲啓 鈹?  鈹溾攢鈹€ vector-store.mjs              # 鍚戦噺瀛樺偍璇诲啓 鈹?  鈹溾攢鈹€ store.mjs                     # 缁撴瀯鍖栧瓨鍌紙Event / Decision / L0锛?鈹?  鈹溾攢鈹€ summarize.mjs                 # L0/L1 鎽樿/鍐崇瓥鐢熸垚锛堣皟鐢?light model锛?鈹?  鈹溾攢鈹€ quality-gate.mjs              # 璐ㄩ噺闂紙寮盠0杩囨护銆佹枃鏈竻娲椼€乫allback鐢熸垚锛?鈹?  鈹溾攢鈹€ entity-extractor.mjs          # 瀹炰綋鎻愬彇锛堟枃浠惰矾寰勩€佹ā鍨嬪悕銆侀厤缃敭銆佸懡浠ゃ€佺鍙ｅ彿锛?鈹?  鈹溾攢鈹€ light-model.mjs               # Light model 閫傞厤锛堟憳瑕?鍐崇瓥鐢熸垚锛?鈹?  鈹溾攢鈹€ embedding-model.mjs           # Embedding 妯″瀷閫傞厤锛堝悜閲忓寲锛?鈹?  鈹溾攢鈹€ config.mjs                    # 閰嶇疆鍔犺浇 鈹?  鈹斺攢鈹€ paths.mjs                     # 璺緞绠＄悊 鈹?鈹溾攢鈹€ extensions/                       # OpenClaw 鎻掍欢 鈹?  鈹斺攢鈹€ working-memory-core/ 鈹?      鈹溾攢鈹€ openclaw.plugin.json      # 鎻掍欢鎻忚堪 鈹?      鈹溾攢鈹€ package.json              # npm 鍖?鈹?      鈹溾攢鈹€ index.mjs                 # 涓诲叆鍙ｏ紙tools + agent_end hook锛?鈹?      鈹溾攢鈹€ index.ts                  # TypeScript 婧愮爜 鈹?      鈹斺攢鈹€ live-ingest.ts            # 澶囩敤 ingest 鍏ュ彛 鈹?鈹溾攢鈹€ cli.mjs                           # CLI 鍏ュ彛锛坕ngest / recall / replay / reindex锛?鈹溾攢鈹€ cli.ts                            # CLI TypeScript 婧愮爜 鈹?鈹溾攢鈹€ schemas/                          # 鏁版嵁缁撴瀯瀹氫箟 鈹?  鈹溾攢鈹€ decision.schema.json          # Decision 缁撴瀯 鈹?  鈹斺攢鈹€ event.schema.json             # Event 缁撴瀯 鈹?鈹溾攢鈹€ prompts/                          # L0/L1 鐢熸垚 Prompt 鈹?鈹溾攢鈹€ docs/                             # 鏂囨。 鈹?  鈹溾攢鈹€ architecture.md               # 鏋舵瀯鎬昏 鈹?  鈹溾攢鈹€ module-map.md                 # 妯″潡璇存槑 鈹?  鈹溾攢鈹€ data-flow.md                  # 鏁版嵁娴佽瑙?鈹?  鈹溾攢鈹€ usage.md                      # 浣跨敤璇存槑 鈹?  鈹溾攢鈹€ roadmap.md                    # 璺嚎鍥?鈹?  鈹溾攢鈹€ decoupling-notes.md           # 瑙ｈ€﹁鏄?鈹?  鈹溾攢鈹€ release-checklist.md          # 鍙戝竷妫€鏌ユ竻鍗?鈹?  鈹溾攢鈹€ validation-summary.md         # 楠岃瘉鎬荤粨 鈹?  鈹溾攢鈹€ validation-round-1.md         # 楠岃瘉绗?杞?鈹?  鈹溾攢鈹€ validation-round-2.md         # 楠岃瘉绗?杞?鈹?  鈹溾攢鈹€ validation-round-3.md         # 楠岃瘉绗?杞?鈹?  鈹斺攢鈹€ fixes-2026-03-10.md           # 2026-03-10 淇璁板綍 鈹?鈹溾攢鈹€ src/                              # TypeScript 婧愮爜 鈹溾攢鈹€ examples/                         # 鑴辨晱绀轰緥鏁版嵁 鈹斺攢鈹€ scripts/                          # 宸ュ叿鑴氭湰 ```  ---  ## 渚濊禆璇存槑  ### 杩愯鐜  - Node.js 18+  ### 渚濊禆鑳藉姏  椤圭洰渚濊禆涓ょ被妯″瀷鑳藉姏锛堜笉缁戝畾鐗瑰畾鍘傚晢锛夛細  **Embedding 妯″瀷** 鈥?鐢ㄤ簬鍚戦噺鍖栬蹇嗛」锛屽仛 hybrid recall 涓殑鍚戦噺鍙洖閮ㄥ垎  **Light 妯″瀷** 鈥?鐢ㄤ簬锛?- 鐢熸垚 L0 鐭憳瑕?- 鐢熸垚 L1 鍐崇瓥鑽夋 - 杞婚噺鎻愮偧浠诲姟  ### 閰嶇疆鏂瑰紡  閫氳繃 `config.json` 鎴?`AGENT_MEMORY_CONFIG_PATH` 鎸囧畾閰嶇疆锛? ```json {   "storage": {     "root": "./data"   },   "models": {     "embedding": {       "baseUrl": "https://浣犵殑 embedding 鎺ュ彛鍦板潃",       "apiKey": "浣犵殑 API Key",       "model": "浣犵殑 embedding 妯″瀷鍚?     },     "light": {       "baseUrl": "https://浣犵殑 chat 鎺ュ彛鍦板潃",       "apiKey": "浣犵殑 API Key",       "model": "浣犵殑杞婚噺妯″瀷鍚?     }   } } ```  ---  ## 濡備綍鏈湴杩愯  ### 1锛夊噯澶囬厤缃枃浠? ```bash cp config.example.json config.json # 缂栬緫 config.json锛屽～鍏ヤ綘鐨勬ā鍨嬮厤缃?```  ### 2锛夊啓鍏ヤ竴杞璇? ```bash node cli.mjs ingest demo-session "鎴戜滑鍐冲畾閲囩敤 L0/L1/L2 鍒嗗眰璁板繂銆? "濂界殑锛屽啀閰嶅悎 hybrid retrieval 鍜?rerank銆? ```  ### 3锛夊彫鍥炶蹇? ```bash node cli.mjs recall 鍒嗗眰璁板繂鏋舵瀯 ```  ### 4锛夊洖鏀惧師璇? ```bash node cli.mjs replay 鍘熻瘽 鍒嗗眰璁板繂 ```  ### 5锛夐噸寤虹储寮? ```bash node cli.mjs reindex ```  ---  ## 褰撳墠杩涘害  ### 宸插畬鎴? - [x] working-memory runtime 楠ㄦ灦 - [x] event / decision / L0 / replay 鍩虹鍐欏叆閾捐矾 - [x] 娣峰悎妫€绱㈠熀纭€閾捐矾 - [x] L2 鍘熻瘽鍥炴斁灞?- [x] rerank 鍘熷瀷 - [x] CLI 鏈湴楠岃瘉 - [x] 璺緞 / 閰嶇疆瑙ｈ€?- [x] 瀹夸富鐜鍏紑鍖栨竻鐞?- [x] 鏂囨。楠ㄦ灦涓庡叕寮€鐗堟暣鐞?- [x] OpenClaw 鎻掍欢鎺ュ叆锛坋xtensions/working-memory-core锛?- [x] agent_end hook 鑷姩 ingest - [x] memory_search / memory_get 宸ュ叿娉ㄥ唽 - [x] Session 绫诲瀷杩囨护锛坈ron/subagent 鑷姩璺宠繃锛?- [x] L0 鑷姩鍚堝苟鏈哄埗锛堝洖婧?鏉?+ 瀹芥硾 topic 鍚堝苟锛?- [x] **L0 妫€绱㈠彫鍥炰慨澶?*锛?026-03-10锛?- [x] **缂栫爜闂淇**锛?026-03-10锛?- [x] **璐ㄩ噺闂ㄥ己鍖?*锛?026-03-10锛?- [x] **瀹炰綋鎻愬彇鎵╁睍**锛?026-03-10锛?- [x] **鏃堕棿鎴抽棶棰樹慨澶嶏紙UTC+8锛?*锛?026-03-14锛?- [x] **iflow/qwen3-max 妯″瀷鏀寔**锛?026-03-14锛?- [x] **鑷姩璁板綍鍔熻兘楠岃瘉**锛?026-03-14锛?- [x] **embedding 閰嶇疆淇**锛?026-03-21锛?- [x] **瀹炰綋鎻愬彇鍣ㄥ寮?*锛?026-03-21锛?- [x] **Runtime 妯″潡鍏ㄩ潰浼樺寲**锛?026-03-21锛?- [x] **cron/subagent 閿欒鍐欏叆淇**锛?026-03-21锛?- [x] **L0 鍚堝苟绐楀彛鎵╁ぇ**锛?026-03-21锛? ### 浠嶅湪缁х画浼樺寲  - [ ] 涓枃妫€绱㈣川閲?- [ ] rerank 璐ㄩ噺 - [ ] 鏇村己鐨?replay 瑕嗙洊 - [ ] 鏇村畬鍠勭殑鎻掍欢鍖栨帴鍏ヨ璁?- [ ] 璁板繂鍙鍖?UI  ---  ## 鏇存柊鏃ュ織  ### 馃殌 2026-03-21 鏋舵瀯鍏ㄩ潰浼樺寲 + cron 鍐欏叆淇  **鏍稿績淇**锛? 1. **淇 cron/subagent 閿欒鍐欏叆璁板繂** 鈥?鏍瑰洜锛氭姈闊崇洃鎺?cron 姣?鍒嗛挓鎵ц涓€娆★紝姣忔 agent_end hook 閮芥妸缁撴灉鍐欏叆璁板繂锛屽鑷?173 鏉?L0 + 201 鏉?Event + 93 鏉?Decision 琚敊璇亴鍏ャ€備慨澶嶏細鍦?hook 灞傛嫤鎴?cron/subagent session锛屼笉鍐嶅啓鍏ャ€?2. **淇 embedding 閰嶇疆璇诲彇澶辫触** 鈥?鎭㈠鍚戦噺妫€绱㈠姛鑳斤紝娣峰悎鍙洖鑳藉姏瀹屽叏鎭㈠ 3. **鎵╁睍瀹炰綋鎻愬彇鍣?* 鈥?鏀寔 .mjs 鏂囦欢鍜屾洿澶氭ā鍨嬪悕鎻愬彇 4. **L0 鍚堝苟绐楀彛鎵╁ぇ** 鈥?浠庡彧鐪嬫渶鍚?鏉℃敼涓哄洖婧渶杩?鏉★紝瑙ｅ喅涓嶅悓 session 浜ゅ弶鍐欏叆鏃跺悎骞跺け鏁?5. **Runtime 妯″潡鍏ㄩ潰鏇存柊** 鈥?14 涓牳蹇冩ā鍧椾紭鍖?6. **璐ㄩ噺闂ㄥ寮?* 鈥?鏂板 fallback pattern 妫€娴嬶紝娉涘寲 actionType + "宸茶褰? 鍒ゅ畾涓哄急 L0  **娑夊強鏂囦欢**锛?- `extensions/working-memory-core/index.mjs` 鈥?鏂板 cron/subagent 杩囨护 - `extensions/working-memory-core/live-ingest.ts` 鈥?鏂板 cron/subagent 杩囨护 - `runtime/store.mjs` 鈥?shouldMergeL0 鍥炴函绐楀彛鎵╁ぇ + 鎶栭煶鐩稿叧鍔犲叆瀹芥硾鍚堝苟 - `runtime/ingest.mjs` 鈥?shouldSkipL0Turn 杩囨护 cron 閲嶅缁撴灉 - `runtime/quality-gate.mjs` 鈥?isWeakL0 妫€娴?fallback pattern  ### 馃帀 2026-03-14 閲嶅ぇ鏇存柊  1. **淇鏃堕棿鎴抽棶棰橈紙UTC+8锛?* 鈥?瑙ｅ喅 Node.js 绯荤粺鏃堕棿鎱?8 灏忔椂鐨勯棶棰?2. **娣诲姞 iflow/qwen3-max 鏀寔** 鈥?鏂板 light model锛屾敮鎸佽嚜鍔ㄥ洖閫€ 3. **楠岃瘉鑷姩璁板綍鍔熻兘** 鈥?纭 agent_end hook 姝ｅ父宸ヤ綔 4. **澧炲己璋冭瘯鏃ュ織** 鈥?娣诲姞 hook 瑙﹀彂鏃ュ織  ### 馃敡 2026-03-10 鐢熶骇鐜淇  1. **淇 L0 妫€绱㈠彫鍥為棶棰?* 鈥?闄嶄綆妫€绱㈤槇鍊硷紝澧炲姞璇濋鍏抽敭璇嶅姞鏉?2. **淇缂栫爜闂** 鈥?缁熶竴 UTF-8 缂栫爜锛岀Щ闄?BOM锛屾竻闄や贡鐮?3. **娓呯悊 general 鍨冨溇鏉＄洰** 鈥?娑堥櫎鐩綍姹℃煋 4. **寮哄寲璐ㄩ噺闂ㄨ鍒?* 鈥?绂佹妯＄硦琛ㄨ堪锛屽己鍒跺疄浣撳寲 5. **鎵╁睍瀹炰綋鎻愬彇** 鈥?鏀寔绔彛鍙枫€佸弬鏁般€佹洿澶氭ā鍨嬪悕鍜岄敊璇被鍨? ---  ## 杩欎釜椤圭洰閫傚悎璋? **閫傚悎**锛?- 鎯崇粰 Agent 澧炲己闀挎湡璁板繂鑳藉姏鐨勪汉 - 鎯宠В鍐?鎽樿涓嶅鐢紝鍘熻瘽涔熸兂鎵惧洖鏉?鐨勯棶棰樼殑浜?- 鎯崇粰 OpenClaw 鍋氭洿寮鸿蹇嗗眰鐨勪汉 - 鎯崇爺绌跺垎灞傝蹇嗭紝鑰屼笉鏄畝鍗?RAG 璁板繂鐨勪汉  **涓嶅お閫傚悎**锛?- 鍙兂鍋氭渶绠€鍗曡亰澶╄褰?embedding 妫€绱㈢殑浜?- 涓嶉渶瑕佺粨鏋勫寲鍐崇瓥 / 鍘熻瘽鍥炴斁鐨勪汉 - 涓嶆墦绠楀仛鏈湴杩愯鍜岄厤缃殑浜? ---  ## 鏂囨。绱㈠紩  ### 鏍稿績鏂囨。 - [鏋舵瀯鎬昏](./docs/architecture.md) - [妯″潡璇存槑](./docs/module-map.md) - [鏁版嵁娴乚(./docs/data-flow.md) - [浣跨敤璇存槑](./docs/usage.md) - [璺嚎鍥綸(./docs/roadmap.md)  ### 鎶€鏈枃妗?- [瑙ｈ€﹁鏄嶿(./docs/decoupling-notes.md) - [鍙戝竷妫€鏌ユ竻鍗昡(./docs/release-checklist.md) - [楠岃瘉鎬荤粨](./docs/validation-summary.md) - [2026-03-10 淇璁板綍](./docs/fixes-2026-03-10.md)  ### 楠岃瘉璁板綍 - [楠岃瘉绗?1 杞甝(./docs/validation-round-1.md) - [楠岃瘉绗?2 杞甝(./docs/validation-round-2.md) - [楠岃瘉绗?3 杞甝(./docs/validation-round-3.md)  ### 鏇存柊鏃ュ織 - [2026-03-21 鏇存柊鏃ュ織](./CHANGELOG-2026-03-21.md) - [2026-03-14 鏇存柊鏃ュ織](./CHANGELOG-2026-03-14.md)  ---  ## 涓€鍙ヨ瘽鎬荤粨  > **杩欐槸涓€濂楅€傞厤 Agent / OpenClaw 鐨勫垎灞傝蹇嗘灦鏋勶細鎶婃憳瑕併€佸喅绛栥€佷簨浠跺拰鍘熻瘽鍒嗗眰瀛樺偍锛屽湪鏌ヨ鏃舵寜闇€鍙洖锛屽啀鎶婃渶鐩稿叧璁板繂娉ㄥ叆褰撳墠涓婁笅鏂囥€?*
+# 分层 Agent 记忆架构（适配 OpenClaw）
+
+> 一套面向智能体长期上下文的分层记忆系统：不仅能记“摘要”，还能记“决策”“事件”和“原话”，并在查询时按需召回，再把最相关记忆注入当前对话上下文。
+
+---
+
+## 最近更新（2026-03-28 ～ 2026-03-31）
+
+这几天的升级重点，不是继续堆 recall 技巧，而是回到长期记忆系统真正的主干：**写入质量、L0 状态机、主线字段纯度、真实链路可验证性**。
+
+本轮已同步进仓库的核心升级包括：
+
+- **写入端治理回归 ingest 前段**：重新强化主线字段抽取与事件落库质量
+- **L0 / NONE / weak / fallback 语义对齐**：把“生成质量差”和“模型链路失败”严格分层
+- **主线字段短句化与噪声清洗**：抑制 markdown、汇报话术、长段落污染主线字段
+- **真实 ingest-stdin 验证链路打通**：绕开 Windows / PowerShell 中文 stdin 污染问题
+- **召回端增强**：强化 precise fact / source-of-truth / replay 回放与低质量记忆降权
+
+已同步的核心代码：
+
+- `runtime/ingest.mjs`
+- `runtime/quality-gate.mjs`
+- `runtime/recall.mjs`
+- `runtime/hybrid-recall.mjs`
+- `runtime/replay-recall.mjs`
+- `extensions/working-memory-core/live-ingest.ts`
+
+新增分析文档目录：
+
+- [`docs/analysis-2026-03-28-to-03-31/`](./docs/analysis-2026-03-28-to-03-31/)
+- [`docs/analysis-2026-03-28-to-03-31/SUMMARY.md`](./docs/analysis-2026-03-28-to-03-31/SUMMARY.md)
+
+---
+
+## 这是什么
+
+这是一个面向 Agent / OpenClaw 场景设计的**分层记忆架构项目**。
+
+它不是那种“把聊天记录全扔进向量库，然后只靠 embedding 做相似检索”的简单记忆方案，而是把记忆拆成不同层：
+
+- **L0：短摘要层** —— 快速告诉模型“这一段大概发生了什么”
+- **L1：决策层** —— 保存可以复用的决定、原因和结果
+- **L2：原话回放层** —— 保存 user / assistant 的原始回合文本，支持回放原话证据
+- **事件层（Event）** —— 表达时间线、过程推进和阶段变化
+- **混合检索（Hybrid Retrieval）** —— 向量检索 + 词法检索
+- **重排（Rerank）** —— 根据查询意图重新排序候选记忆
+- **上下文注入（Runtime Injection）** —— 把最相关记忆打包注入当前运行时上下文
+
+这套东西的目标，不是“让模型记更多字”，而是：
+
+> **让模型在需要时拿到正确类型的记忆。**
+
+---
+
+## 这个项目解决什么问题
+
+传统 Agent memory 常见问题：
+
+1. **所有记忆混在一起**
+   - 决策、事件、原话、摘要没有区分
+
+2. **只能找相似文本，不能理解记忆角色**
+   - “上次我们定了什么方案”
+   - 和“当时原话怎么说的”
+   - 实际需要的是两种不同类型的记忆
+
+3. **会话一长就只能靠压缩摘要**
+   - 摘要会丢细节
+   - 尤其容易丢掉“为什么这么做”和“原话证据”
+
+4. **启动时硬读大记忆文件，污染上下文**
+   - 会浪费上下文窗口
+   - 也会把不相关的旧信息强塞进当前对话
+
+这个项目的核心思路就是：
+
+- 不在启动时硬读大记忆文件
+- 改成**按需 recall**
+- 不把所有记忆扁平化
+- 改成**按层存储、按层召回、统一重排、统一注入**
+
+---
+
+## 为什么这不是普通 RAG
+
+很多人第一眼看到“向量检索 + 记忆 + 注入上下文”，会觉得这就是普通 RAG。
+
+但这套系统和普通 RAG 的核心区别很明显：
+
+| 维度 | 普通 RAG | 本系统 |
+|------|---------|--------|
+| 存储结构 | 扁平化向量库 | L0 摘要 / L1 决策 / L2 原话 / Event 时间线，分层存储 |
+| 检索方式 | 只看文本相似度 | 按记忆角色召回 + 向量 + 词法 + 重排 |
+| 服务场景 | 单次问答 | 长期协作、任务推进、对话连续性 |
+| 写入链路 | 通常不关注 | 完整 ingest：实体提取 → 摘要生成 → 结构化写入 → 索引更新 |
+| 输出形式 | 检索结果直接拼接 | Context Pack 打包 + 分桶输出 |
+
+所以更准确地说：
+
+> **它可以利用 RAG 的检索能力，但它本身不是“普通 RAG”，而是一套分层的 Agent Working Memory。**
+
+---
+
+## 核心分层设计
+
+### L0：短摘要层
+
+- 快速注入上下文
+- 给模型一个“这一段最核心发生了什么”的导航视图
+- 适合回答：最近主线是什么？这一段大概在做什么？
+
+### L1：决策层
+
+- 保存结构化决策
+- 强调：做了什么决定、为什么这么做、结果如何
+- 适合回答：上次我们最终决定怎么做？为什么不走旧方案？
+
+### L2：原话回放层
+
+- 保存原始 user / assistant 回合
+- 当用户问“原话是什么”时，回放原始文本证据
+- 适合回答：你当时原话怎么说的？那段聊天原文是什么？
+
+### Event：事件层
+
+- 表达时间线、推进过程、阶段变化
+- 用来补充“不是最终结论，但值得记住”的过程信息
+- 适合回答：这几天是怎么一步一步推进到这里的？
+
+---
+
+## 整体数据流
+
+### 写入链路（Ingest）
+
+用户回合 + 助手回合
+→ 文本清洗
+→ 实体提取 / 动作类型推断
+→ L0 摘要生成
+→ 质量门过滤
+→ Event / L0 / Decision / Replay 写入
+→ 更新向量索引
+
+### 读取链路（Recall）
+
+用户查询
+→ 意图分类
+→ 多源召回（L0 / Decision / Event / Replay / Hybrid）
+→ 统一合并
+→ Rerank 重排
+→ Context Pack 打包
+→ 注入当前模型上下文
+
+---
+
+## OpenClaw 插件接入
+
+本项目通过 `extensions/working-memory-core` 接入 OpenClaw 宿主，实现：
+
+- 对话结束后自动 ingest（`agent_end` hook）
+- 查询时按需 recall（`memory_search` / `memory_get`）
+- 自动去重
+- cron / subagent session 过滤
+
+---
+
+## 仓库结构
+
+```text
+raw-memory-assistant/
+├── runtime/                          # 运行时核心模块
+├── extensions/working-memory-core/   # OpenClaw 插件
+├── cli.mjs                           # CLI 入口
+├── schemas/                          # 数据结构定义
+├── prompts/                          # L0/L1 生成 Prompt
+├── docs/                             # 文档
+├── src/                              # TypeScript 源码
+├── examples/                         # 脱敏示例数据
+└── scripts/                          # 工具脚本
+```
+
+---
+
+## 当前进度
+
+### 已完成
+
+- [x] working-memory runtime 骨架
+- [x] event / decision / L0 / replay 基础写入链路
+- [x] 混合检索基础链路
+- [x] L2 原话回放层
+- [x] rerank 原型
+- [x] CLI 本地验证
+- [x] OpenClaw 插件接入
+- [x] agent_end hook 自动 ingest
+- [x] memory_search / memory_get 工具注册
+- [x] Session 类型过滤（cron/subagent 自动跳过）
+- [x] embedding 配置修复
+- [x] Runtime 模块全面优化
+- [x] L0 合并窗口扩大
+- [x] **2026-03-28 ～ 2026-03-31 长期记忆主干修复与架构收口**
+
+### 仍在继续优化
+
+- [ ] 中文检索质量
+- [ ] rerank 质量
+- [ ] 更强的 replay 覆盖
+- [ ] 更完善的插件化接入设计
+- [ ] 记忆可视化 UI
+
+---
+
+## 更新日志
+
+### 🚀 2026-03-28 ～ 2026-03-31 长期记忆主干修复与架构收口
+
+1. 从 recall 微调切回 ingest 前段治理
+2. 修正 L0 / NONE / weak / fallback 语义边界
+3. 新增主线字段短句化与噪声清洗
+4. 增强 recall 精细路由能力
+5. 打通真实 ingest-stdin 验证链路
+6. 新增一整套分析与根因文档
+
+### 🚀 2026-03-21 架构全面优化 + cron 写入修复
+
+1. 修复 cron/subagent 错误写入记忆
+2. 修复 embedding 配置读取失败
+3. 扩展实体提取器
+4. L0 合并窗口扩大
+5. Runtime 模块全面更新
+6. 质量门增强
+
+### 🎉 2026-03-14 重大更新
+
+1. 修复时间戳问题（UTC+8）
+2. 添加 iflow/qwen3-max 支持
+3. 验证自动记录功能
+4. 增强调试日志
+
+### 🔧 2026-03-10 生产环境修复
+
+1. 修复 L0 检索召回问题
+2. 修复编码问题
+3. 清理 general 垃圾条目
+4. 强化质量门规则
+5. 扩展实体提取
+
+---
+
+## 文档索引
+
+### 核心文档
+- [架构总览](./docs/architecture.md)
+- [模块说明](./docs/module-map.md)
+- [数据流](./docs/data-flow.md)
+- [使用说明](./docs/usage.md)
+- [路线图](./docs/roadmap.md)
+
+### 技术文档
+- [解耦说明](./docs/decoupling-notes.md)
+- [发布检查清单](./docs/release-checklist.md)
+- [验证总结](./docs/validation-summary.md)
+- [2026-03-10 修复记录](./docs/fixes-2026-03-10.md)
+
+### 本轮分析文档
+- [2026-03-28 ～ 2026-03-31 总结](./docs/analysis-2026-03-28-to-03-31/SUMMARY.md)
+- [analysis-2026-03-28-to-03-31 目录](./docs/analysis-2026-03-28-to-03-31/)
+
+---
+
+## 一句话总结
+
+> **这是一套适配 Agent / OpenClaw 的分层记忆架构：把摘要、决策、事件和原话分层存储，在查询时按需召回，再把最相关记忆注入当前上下文。**
