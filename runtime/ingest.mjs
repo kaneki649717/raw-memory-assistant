@@ -3,226 +3,175 @@ import { appendReplayItem } from "./replay-store.mjs";
 import { indexTurnArtifacts } from "./hybrid-recall.mjs";
 import { extractCommands, extractEntities, inferActionType } from "./entity-extractor.mjs";
 import { generateL0WithModel, generateL1WithModel } from "./summarize.mjs";
-import { isWeakL0, normalizeDecisionPayload, normalizeL0, pickTimelineHook, sanitizeMemoryText } from "./quality-gate.mjs";
+import { normalizeDecisionPayload, normalizeL0 } from "./quality-gate.mjs";
+import { reportModelIssue } from "./model-alerts.mjs";
 
 function makeId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function slugify(value) {
-  return sanitizeMemoryText(value)
-    .toLowerCase()
-    .replace(/[\u4e00-\u9fff]+/g, (m) => m)
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 32) || "general";
-}
-
-function hashText(text) {
-  let h = 2166136261;
-  for (const ch of String(text || "")) {
-    h ^= ch.charCodeAt(0);
-    h = Math.imul(h, 16777619);
-  }
-  return Math.abs(h >>> 0).toString(36);
-}
-
 function buildResultTag(text) {
-  if (text.includes("确认") || text.includes("结论")) return "已确认方向";
-  if (text.includes("切") || text.includes("切换") || text.includes("改为")) return "已调整";
+  if (text.includes("确认") || text.includes("结论")) return "已确认方案";
+  if (text.includes("修改") || text.includes("切换") || text.includes("改为")) return "已调整";
   if (text.includes("失败") || text.includes("报错")) return "待继续排查";
   if (text.includes("设计") || text.includes("方案")) return "方案已形成";
   return "已记录";
 }
 
-function chooseTopic(actionType, entities, userText, assistantText) {
-  const text = sanitizeMemoryText(`${userText} ${assistantText}`);
-  const entity = entities.find(Boolean);
-  if (entity) {
-    const e = sanitizeMemoryText(entity).toLowerCase();
-    if (e.includes("identity.md") || e.includes("identity-md")) return "身份设定";
-    if (e.includes("user.md") || e.includes("user-md")) return "用户设定";
-    if (e.includes("tools.md") || e.includes("tools-md")) return "工具偏好";
-    if (e.includes("heartbeat.md") || e.includes("heartbeat-md")) return "心跳规则";
-    if (e.includes("bootstrap.md") || e.includes("bootstrap-md")) return "启动流程";
-    if (e.includes("models.js") || e.includes("models-js")) return "模型配置";
-    if (e.includes("openclaw")) return "OpenClaw";
-    if (e.includes("whatsapp")) return "WhatsApp";
-    if (e.includes("douyin") || e.includes("抖音")) return "抖音相关";
-    return sanitizeMemoryText(entity);
+function buildFallbackSummary(actionType, entities, resultTag) {
+  const coreEntity = entities[0] ?? "general";
+  return `${actionType} | ${coreEntity} | ${resultTag}`;
+}
+
+function inferConfigKeys(entities) {
+  return entities.filter(v => /(config\.json|embedding|model|maxTokens|contextWindow|apiKey|baseUrl)/i.test(v));
+}
+
+function inferEventSubtype({ userText, assistantText, actionType, entities = [], summaryShort = "", resultTag = "" }) {
+  const text = [userText, assistantText, actionType, summaryShort, resultTag, ...entities].join("\n").toLowerCase();
+
+  const hasVersionSignals = ['升级', '版本', '切换', '恢复', '改为', '默认模型', 'gpt-5.4', 'glm-4.7', 'qwen3', 'openai-codex', 'sub2api'].some((token) => text.includes(token));
+  const hasConfigSignals = ['config', 'baseurl', 'apikey', 'model', 'openclaw.json', 'auth-profiles.json', 'gateway'].some((token) => text.includes(token));
+  const hasCleanupSignals = ['清理', '删除', '封禁', '解绑', 'group 绑定', '旧账号'].some((token) => text.includes(token));
+  const hasReminderSignals = ['heartbeat', 'reminder', '提醒', '定时'].some((token) => text.includes(token));
+  const genericProgressSignals = ['会话推进', '已记录', '继续修', '排查', '跟进', '处理'].some((token) => text.includes(token));
+
+  if (hasVersionSignals) return 'version_change';
+  if (hasConfigSignals) return 'config_change';
+  if (hasCleanupSignals) return 'account_cleanup';
+  if (hasReminderSignals) return 'reminder';
+  if (genericProgressSignals) return 'generic_progress';
+  return 'general';
+}
+
+function resolveL0Consumption({ l0Result, fallbackSummary }) {
+  const normalized = normalizeL0(l0Result);
+
+  if (normalized.status === "good" || normalized.status === "weak") {
+    return {
+      l0Result: normalized,
+      summaryShort: normalized.text,
+      shouldWriteL0: true,
+      usedFallbackSummary: false,
+    };
   }
-  if (/(记忆|memory|recall|l0|l1|l2|replay)/i.test(text)) return "记忆系统";
-  if (/(抖音|douyin|视频|下载)/i.test(text)) return "抖音相关";
-  if (/(openclaw|gateway|hook|plugin)/i.test(text)) return "OpenClaw";
-  if (/(whatsapp)/i.test(text)) return "WhatsApp";
-  if (/(天气|weather)/i.test(text)) return "天气";
-  if (/(模型|model|embedding|rerank)/i.test(text)) return "模型与召回";
-  if (/(连接|发送|测试消息|状态确认)/i.test(text)) return "会话状态";
-  return sanitizeMemoryText(actionType || "会话推进");
-}
 
-function buildFallbackSummary(actionType, entities, resultTag, userText, assistantText) {
-  return pickTimelineHook({ actionType, entities, userText, assistantText, resultTag });
-}
+  if (normalized.status === "none") {
+    return {
+      l0Result: normalized,
+      summaryShort: fallbackSummary,
+      shouldWriteL0: false,
+      usedFallbackSummary: false,
+    };
+  }
 
-function buildHandshakeMeta({ sessionId, timestamp, topic, userText, assistantText }) {
-  const turnKey = `turn:${slugify(sessionId)}:${hashText(`${timestamp}|${userText}|${assistantText}`)}`;
-  const timelineKey = `timeline:${slugify(topic)}:${String(timestamp).slice(0, 10)}`;
+  if (normalized.status === "fallback") {
+    return {
+      l0Result: normalized,
+      summaryShort: fallbackSummary,
+      shouldWriteL0: true,
+      usedFallbackSummary: true,
+    };
+  }
+
   return {
-    turnKey,
-    timelineKey,
-    topicKey: slugify(topic),
+    l0Result: normalized,
+    summaryShort: fallbackSummary,
+    shouldWriteL0: false,
+    usedFallbackSummary: false,
   };
 }
 
-/**
- * 判断一个 turn 是否应该跳过 L0 生成。
- * - HEARTBEAT_OK / NO_REPLY 等系统消息
- * - 纯问候
- * - cron 任务产出的重复性结果（抖音监控未开播等）
- */
-function shouldSkipL0Turn(userText, assistantText, actionType) {
-  const combined = sanitizeMemoryText(`${userText} ${assistantText}`).toLowerCase();
-  const normalizedUser = sanitizeMemoryText(userText).toLowerCase();
-  if (!combined) return true;
-
-  // 系统静默消息
-  if (normalizedUser === "heartbeat_ok" || normalizedUser === "no_reply") return true;
-  if (normalizedUser.includes("a new session was started via /new or /reset")) return true;
-  if (normalizedUser.includes("execute your session startup sequence")) return true;
-
-  // 纯问候
-  if (["你好", "hi", "hello", "在吗", "ok"].includes(normalizedUser) && combined.length < 30) return true;
-  if (combined.includes("消息已发送") && combined.includes("测试消息") && combined.length < 50) return true;
-  if (combined.includes("reply with ok") || combined.includes("仅回复ok") || combined.includes("只回ok")) return true;
-
-  // 纯状态确认、无实质内容
-  const emptyPatterns = [
-    /^(好的?|ok|收到|明白了?|知道了?)[\s\S]{0,50}$/i,
-    /正在.*请稍等/i,
-    /已经.*完成/i,
-  ];
-  if (emptyPatterns.some(re => re.test(combined)) && combined.length < 80) return true;
-
-  // 【关键】跳过 cron 产生的重复性"无变化"结果
-  const noChangePatterns = [
-    /均未开播.*未触发通知/,
-    /均未直播.*未触发通知/,
-    /未开播.*未发telegram/i,
-    /未开播.*未发送通知/,
-    /状态正常无异常/,
-    /无异常无需告警/,
-    /静默通过/,
-    /无任务待处理/,
-  ];
-  if (noChangePatterns.some(re => re.test(combined))) return true;
-
-  return false;
-}
-
-export async function createEventFromTurn({ sessionId, userText, assistantText, chatType = "direct", timestamp }) {
-  const cleanUserText = sanitizeMemoryText(userText);
-  const cleanAssistantText = sanitizeMemoryText(assistantText);
-  const combined = `${cleanUserText}\n${cleanAssistantText}`;
-  const entities = extractEntities(combined).map(sanitizeMemoryText).filter(Boolean);
-  const actionType = sanitizeMemoryText(inferActionType(combined));
+export async function createEventFromTurn({ sessionId, userText, assistantText, chatType = "direct", l0Generator = generateL0WithModel }) {
+  const combined = `${userText}\n${assistantText}`;
+  const entities = extractEntities(combined);
+  const actionType = inferActionType(combined);
   const resultTag = buildResultTag(combined);
-  const topic = chooseTopic(actionType, entities, cleanUserText, cleanAssistantText);
-  if (shouldSkipL0Turn(cleanUserText, cleanAssistantText, actionType)) {
-    return null;
-  }
-  const fallbackSummary = buildFallbackSummary(actionType, entities, resultTag, cleanUserText, cleanAssistantText);
+  const fallbackSummary = buildFallbackSummary(actionType, entities, resultTag);
 
-  let summaryShort = fallbackSummary;
-  let retryCount = 0;
-  const maxRetries = 3;
-  
-  // 【简化】多次重试生成更好的 L0
-  while (retryCount < maxRetries) {
-    try {
-      const modelL0 = await generateL0WithModel({ userText: cleanUserText, assistantText: cleanAssistantText });
-      summaryShort = normalizeL0(modelL0, fallbackSummary);
-      
-      // 如果生成的 L0 不是弱 L0，退出循环
-      if (!isWeakL0(summaryShort)) {
-        break;
-      }
-      
-      retryCount++;
-    } catch {
-      retryCount++;
-    }
-  }
-  
-  // 【简化】直接检测最终的 summaryShort 是否为弱 L0
-  const isWeak = isWeakL0(summaryShort);
+  let l0Resolution = {
+    l0Result: { status: "none", text: null, model: null, attempts: 0, source: "primary" },
+    summaryShort: fallbackSummary,
+    shouldWriteL0: false,
+    usedFallbackSummary: false,
+  };
 
-  // 【修复】使用 UTC+8 时区的当前时间
-  const localDate = new Date();
-  const utcTime = localDate.getTime();
-  const chinaOffset = 8 * 60 * 60 * 1000; // UTC+8
-  const correctUtcTime = utcTime + chinaOffset;
-  const ts = new Date(correctUtcTime).toISOString();
-  const handshake = buildHandshakeMeta({ sessionId, timestamp: ts, topic, userText: cleanUserText, assistantText: cleanAssistantText });
+  try {
+    const modelL0 = await l0Generator({ userText, assistantText });
+    l0Resolution = resolveL0Consumption({ l0Result: modelL0, fallbackSummary });
+  } catch (error) {
+    reportModelIssue("light-l0", error, { source: "createEventFromTurn", note: "L0 摘要生成异常，且未进入合法 fallback 状态" });
+  }
+
+  const subtype = inferEventSubtype({ userText, assistantText, actionType, entities, summaryShort: l0Resolution.summaryShort, resultTag });
 
   return {
     id: makeId("evt"),
-    timestamp: ts,
+    timestamp: new Date().toISOString(),
     sessionId,
     chatType,
-    topic,
-    topicKey: handshake.topicKey,
-    timelineKey: handshake.timelineKey,
-    turnKey: handshake.turnKey,
+    topic: entities[0] ?? actionType,
     actionType,
+    subtype,
     entities,
-    summaryShort,
+    summaryShort: l0Resolution.summaryShort,
     resultTag,
-    // 【关键】弱 L0 的 importance 降低到 0.2，召回时会排在后面
-    importance: isWeak ? 0.2 : (entities.length > 0 ? 0.7 : 0.4),
+    importance: entities.length > 0 ? 0.7 : 0.4,
     sourceMessageCount: 2,
-    sourceRefs: [handshake.turnKey],
+    sourceRefs: [],
+    l0State: l0Resolution.l0Result,
+    shouldWriteL0: l0Resolution.shouldWriteL0,
+    usedFallbackSummary: l0Resolution.usedFallbackSummary,
   };
 }
 
-function shouldCreateDecision(combined, entities) {
-  const lower = combined.toLowerCase();
-  if (combined.length > 800) return true;
-  if (entities.length >= 2) return true;
-  return ["决定", "结论", "方案", "改成", "切到", "确认", "不要", "应该", "memory", "embedding", "recall", "l0", "l1", "l2", "修复", "架构", "问题"].some((k) => lower.includes(k));
+export function createL0ItemFromEvent(event) {
+  return {
+    id: makeId("l0"),
+    eventId: event.id,
+    sessionId: event.sessionId,
+    timestamp: event.timestamp,
+    topic: event.topic,
+    actionType: event.actionType,
+    subtype: event.subtype || 'general',
+    entities: event.entities,
+    summaryShort: event.summaryShort,
+    resultTag: event.resultTag,
+    importance: event.importance,
+    l0Status: event.l0State?.status || 'good',
+    l0Model: event.l0State?.model || null,
+    l0Source: event.l0State?.source || 'primary',
+    l0Attempts: event.l0State?.attempts || 0,
+  };
 }
 
-export async function maybeCreateDecision({ eventId, sessionId, userText, assistantText, timestamp, event }) {
-  const cleanUserText = sanitizeMemoryText(userText);
-  const cleanAssistantText = sanitizeMemoryText(assistantText);
-  const combined = `${cleanUserText}\n${cleanAssistantText}`;
-  const entities = extractEntities(combined).map(sanitizeMemoryText).filter(Boolean);
-  const commands = extractCommands(combined).map(sanitizeMemoryText).filter(Boolean);
+export async function maybeCreateDecision({ eventId, sessionId, userText, assistantText }) {
+  const combined = `${userText}\n${assistantText}`;
+  const entities = extractEntities(combined);
+  const commands = extractCommands(combined);
   const lower = combined.toLowerCase();
-  if (!shouldCreateDecision(combined, entities)) return null;
+  const shouldWrite = ["决定", "结论", "方案", "改成", "切到", "确认", "不要", "应该", "memory", "embedding", "recall", "l0", "l1", "l2"].some(k => lower.includes(k));
+  if (!shouldWrite) return null;
 
   const fallback = {
-    title: event?.topic ? `${event.topic} 相关决策` : (entities[0] ? `${entities[0]} 相关决策` : "会话决策"),
-    decisionText: sanitizeMemoryText(combined.slice(0, 400)),
-    whyText: lower.includes("因为") ? sanitizeMemoryText(combined.slice(Math.max(0, lower.indexOf("因为")), Math.min(combined.length, lower.indexOf("因为") + 180))) : "",
-    outcomeText: lower.includes("不要") ? "明确排除旧路径" : "形成可复用结论",
-    files: entities.filter((v) => /\.(ts|tsx|js|jsx|json|md|py|yml|yaml|toml|ini)$/.test(v)),
+    title: entities[0] ? `${entities[0]} 相关决策` : "会话决策",
+    decisionText: combined.slice(0, 240),
+    whyText: lower.includes("因为") ? combined.slice(Math.max(0, lower.indexOf("因为")), Math.min(combined.length, lower.indexOf("因为") + 120)) : "",
+    outcomeText: lower.includes("不要") ? "明确排除旧路线" : "形成可复用结论",
+    files: entities.filter(v => /\.(ts|tsx|js|jsx|json|md|py|yml|yaml|toml|ini)$/.test(v)),
     entities,
-    configKeys: entities.filter((v) => /(memorySearch|primary|maxTokens|contextWindow|MEMORY\.md|openclaw\.json)/i.test(v)),
+    configKeys: inferConfigKeys(entities),
     commands,
   };
 
   try {
-    const modelPayload = await generateL1WithModel({ userText: cleanUserText, assistantText: cleanAssistantText });
+    const modelPayload = await generateL1WithModel({ userText, assistantText });
     const normalized = normalizeDecisionPayload(modelPayload);
     if (normalized && normalized.decisionText) {
       return {
         id: makeId("dec"),
         eventId,
         sessionId,
-        topicKey: event?.topicKey,
-        timelineKey: event?.timelineKey,
-        turnKey: event?.turnKey,
         title: normalized.title || fallback.title,
         decisionText: normalized.decisionText || fallback.decisionText,
         whyText: normalized.whyText || fallback.whyText,
@@ -232,19 +181,17 @@ export async function maybeCreateDecision({ eventId, sessionId, userText, assist
         configKeys: normalized.configKeys.length ? normalized.configKeys : fallback.configKeys,
         commands: normalized.commands.length ? normalized.commands : fallback.commands,
         confidence: 0.84,
-        createdAt: timestamp || new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       };
     }
-  } catch {
+  } catch (error) {
+    reportModelIssue("light-l1", error, { source: "maybeCreateDecision", note: "L1 决策提炼失败，已回退 fallback decision" });
   }
 
   return {
     id: makeId("dec"),
     eventId,
     sessionId,
-    topicKey: event?.topicKey,
-    timelineKey: event?.timelineKey,
-    turnKey: event?.turnKey,
     title: fallback.title,
     decisionText: fallback.decisionText,
     whyText: fallback.whyText,
@@ -254,32 +201,27 @@ export async function maybeCreateDecision({ eventId, sessionId, userText, assist
     configKeys: fallback.configKeys,
     commands: fallback.commands,
     confidence: 0.72,
-    createdAt: timestamp || new Date().toISOString(),
+    createdAt: new Date().toISOString(),
   };
 }
 
-export async function ingestTurn({ sessionId, userText, assistantText, chatType = "direct", timestamp }) {
-  const event = await createEventFromTurn({ sessionId, userText, assistantText, chatType, timestamp });
-  if (!event) {
-    return { skipped: true, reason: "low_value_turn" };
-  }
+export async function ingestTurn({ sessionId, userText, assistantText, chatType = "direct" }) {
+  const event = await createEventFromTurn({ sessionId, userText, assistantText, chatType });
   appendEvent(event);
-  const l0Item = createL0ItemFromEvent(event);
-  appendL0Item(l0Item);
-  const decision = await maybeCreateDecision({ eventId: event.id, sessionId, userText, assistantText, timestamp: event.timestamp, event });
+
+  const l0Item = event.shouldWriteL0 ? createL0ItemFromEvent(event) : null;
+  if (l0Item) appendL0Item(l0Item);
+
+  const decision = await maybeCreateDecision({ eventId: event.id, sessionId, userText, assistantText });
   if (decision) appendDecision(decision);
   appendReplayItem({
     id: makeId("replay"),
-    createdAt: event.timestamp,
-    timestamp: event.timestamp,
+    createdAt: new Date().toISOString(),
     sessionId,
     eventId: event.id,
     decisionId: decision?.id ?? null,
-    topicKey: event.topicKey,
-    timelineKey: event.timelineKey,
-    turnKey: event.turnKey,
-    userText: sanitizeMemoryText(userText),
-    assistantText: sanitizeMemoryText(assistantText),
+    userText,
+    assistantText,
     entities: event.entities,
     files: decision?.files ?? [],
   });
@@ -288,6 +230,7 @@ export async function ingestTurn({ sessionId, userText, assistantText, chatType 
   try {
     vectorIndex = await indexTurnArtifacts({ event, decision, l0Item });
   } catch (error) {
+    reportModelIssue("embedding-index", error, { source: "ingestTurn", note: "向量索引失败，当前 turn 未完成 embedding 索引" });
     vectorIndex = {
       indexed: 0,
       mode: "error",
@@ -298,20 +241,4 @@ export async function ingestTurn({ sessionId, userText, assistantText, chatType 
   return { event, l0Item, decision, vectorIndex };
 }
 
-export function createL0ItemFromEvent(event) {
-  return {
-    id: makeId("l0"),
-    eventId: event.id,
-    sessionId: event.sessionId,
-    timestamp: event.timestamp,
-    topic: event.topic,
-    topicKey: event.topicKey,
-    timelineKey: event.timelineKey,
-    turnKey: event.turnKey,
-    actionType: event.actionType,
-    entities: event.entities,
-    summaryShort: event.summaryShort,
-    resultTag: event.resultTag,
-    importance: event.importance,
-  };
-}
+export { resolveL0Consumption };

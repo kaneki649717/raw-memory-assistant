@@ -75,6 +75,8 @@ function lexicalScore(query, text, meta = {}) {
     score += entityHits / qTokens.length;
   }
 
+  score += authorityLexicalBoost(query, [t, entityText].join("\n"));
+
   if (hasCjk(q)) {
     const qChunks = extractCjkChunks(q);
     let chunkHits = 0;

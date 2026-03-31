@@ -31,7 +31,7 @@ function buildReplaySeenSet(replayStorePath: string): Set<string> {
   if (!fs.existsSync(replayStorePath)) return new Set();
   try {
     const replay = JSON.parse(fs.readFileSync(replayStorePath, "utf8"));
-    return new Set((replay.items || []).map((item: any) => `${item.sessionId}::${item.timestamp || item.createdAt}::${item.userText}::${item.assistantText}`));
+    return new Set((replay.items || []).map((item: any) => `${item.sessionId}::${item.userText}::${item.assistantText}`));
   } catch {
     return new Set();
   }
@@ -110,13 +110,22 @@ const plugin = {
 
         const timestamp = new Date().toISOString();
         const sessionId = ctx?.sessionId || ctx?.sessionKey || "main";
-        const dedupeKey = `${sessionId}::${timestamp}::${userText}::${assistantText}`;
+        const dedupeKey = `${sessionId}::${userText}::${assistantText}`;
         const seen = buildReplaySeenSet(replayStorePath);
         if (seen.has(dedupeKey)) return;
 
+        const payload = {
+          sessionId,
+          userText,
+          assistantText,
+          chatType: "direct",
+          timestamp,
+        };
+
         const cp = await import("node:child_process");
-        cp.execFileSync(process.execPath, [cliPath, "ingest", sessionId, userText, assistantText, "direct", timestamp], {
+        cp.execFileSync(process.execPath, [cliPath, "ingest-stdin"], {
           cwd: workspaceDir,
+          input: JSON.stringify(payload),
           encoding: "utf8",
           windowsHide: true,
           maxBuffer: 1024 * 1024 * 16,

@@ -1,7 +1,6 @@
 export function sanitizeMemoryText(value) {
   return String(value ?? "")
     .replace(/\uFFFD/g, "")
-    .replace(/�\?/g, "")
     .replace(/�/g, "")
     .replace(/[\r\t]+/g, " ")
     .replace(/\s+/g, " ")
@@ -15,12 +14,12 @@ export function isWeakL0(text) {
   if (trimmed.length > 48) return true;
   if (!trimmed.includes("|")) return true;
   if (trimmed.toLowerCase().includes("general")) return true;
+
   const parts = trimmed.split("|").map((v) => sanitizeMemoryText(v));
   if (parts.length < 3) return true;
   if (!parts[1] || parts[1].length < 2) return true;
   if (!parts[2] || parts[2].length < 6) return true;
-  
-  // 【强化】禁止模糊表述检测
+
   const vaguePatterns = [
     /修复了bug/i,
     /修改了配置/i,
@@ -33,24 +32,12 @@ export function isWeakL0(text) {
     /研究了/i,
     /分析了/i,
     /继续处理/i,
-    /会话推进.*已记录/i,
-    /会话推进.*已确认方向/i,
-    /会话推进.*已调整/i,
   ];
   if (vaguePatterns.some((re) => re.test(trimmed))) return true;
-  
-  // 【强化】禁止空泛结果标签
+
   const weakPhrases = [
     "已确认方向",
     "已记录",
-    "已调整",
-    "已完成",
-    "已处理",
-    "已修改",
-    "已更新",
-    "已优化",
-    "已修复",
-    "已解决",
     "会话推进 | general",
     "继续处理",
     "研究了",
@@ -58,34 +45,37 @@ export function isWeakL0(text) {
     "修了bug",
     "配置修改 | general",
     "会话推进 | general | 已记录",
-    "配置修改 | OpenClaw | 已调整",
-    "配置修改 | 记忆系统 | 已调整",
-    "会话推进 | OpenClaw | 已记录",
-    "会话推进 | 抖音相关 | 已记录",
-    "会话推进 | OpenClaw | 已确认方向",
   ];
-
-  // 【关键】 fallback 生成的 pattern 全部判定为弱 L0
-  // 格式: "actionType | topic | resultTag" 且 actionType 为泛化类型
-  const genericActionTypes = ["会话推进", "配置修改", "记忆设计"];
-  const isFallbackPattern = genericActionTypes.some(action =>
-    trimmed.startsWith(action + " | ") && (trimmed.endsWith("| 已记录") || trimmed.endsWith("| 已调整"))
-  );
-  if (isFallbackPattern) return true;
-  
-  // 【新增】如果第三部分只是纯结果标签（没有具体内容），判定为弱 L0
-  const thirdPart = parts[2] || "";
-  const pureResultTags = ["已记录", "已确认方向", "已调整", "已完成", "已处理"];
-  if (pureResultTags.includes(thirdPart)) return true;
-  
   return weakPhrases.some((v) => trimmed.includes(v));
 }
 
-export function normalizeL0(text, fallback) {
-  const t = sanitizeMemoryText(text).replace(/^[-*]\s*/, "");
-  if (!t || t === "NONE") return sanitizeMemoryText(fallback);
-  if (t.toLowerCase().includes("general")) return sanitizeMemoryText(fallback);
-  return t;
+export function normalizeL0(result) {
+  if (!result || typeof result !== "object") {
+    return {
+      status: "none",
+      text: null,
+      model: null,
+      attempts: 0,
+      source: "primary",
+    };
+  }
+
+  const normalizedStatus = ["good", "weak", "none", "connect_fail", "fallback"].includes(result.status)
+    ? result.status
+    : "none";
+  const normalizedText = result.text == null ? null : sanitizeMemoryText(result.text).replace(/^[-*]\s*/, "");
+
+  return {
+    status: normalizedStatus,
+    text: normalizedText || null,
+    model: result.model ?? null,
+    attempts: Number(result.attempts) || 0,
+    source: result.source ?? "primary",
+    connectFailures: Number(result.connectFailures) || 0,
+    errors: result.errors,
+    primary: result.primary,
+    backup: result.backup,
+  };
 }
 
 export function normalizeDecisionPayload(payload) {
