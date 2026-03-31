@@ -4,33 +4,6 @@
 
 ---
 
-## 最近更新（2026-03-28 ～ 2026-03-31）
-
-这几天的升级重点，不是继续堆 recall 技巧，而是回到长期记忆系统真正的主干：**写入质量、L0 状态机、主线字段纯度、真实链路可验证性**。
-
-本轮已同步进仓库的核心升级包括：
-
-- **写入端治理回归 ingest 前段**：重新强化主线字段抽取与事件落库质量
-- **L0 / NONE / weak / fallback 语义对齐**：把“生成质量差”和“模型链路失败”严格分层
-- **主线字段短句化与噪声清洗**：抑制 markdown、汇报话术、长段落污染主线字段
-- **真实 ingest-stdin 验证链路打通**：绕开 Windows / PowerShell 中文 stdin 污染问题
-- **召回端增强**：强化 precise fact / source-of-truth / replay 回放与低质量记忆降权
-
-已同步的核心代码：
-
-- `runtime/ingest.mjs`
-- `runtime/quality-gate.mjs`
-- `runtime/recall.mjs`
-- `runtime/hybrid-recall.mjs`
-- `runtime/replay-recall.mjs`
-- `extensions/working-memory-core/live-ingest.ts`
-
-新增分析文档目录：
-
-- [`docs/analysis-2026-03-28-to-03-31/`](./docs/analysis-2026-03-28-to-03-31/)
-- [`docs/analysis-2026-03-28-to-03-31/SUMMARY.md`](./docs/analysis-2026-03-28-to-03-31/SUMMARY.md)
-
----
 
 ## 这是什么
 
